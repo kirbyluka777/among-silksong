@@ -3,6 +3,7 @@ from box import InputBox
 from box import Button
 import sys
 import struct
+import os
 
 # Initialize Pygame
 pg.init()
@@ -126,6 +127,8 @@ def save_binary(file_name, data, format): # solo funciona para team claramente
 def load_binary(file_name, game, format):
     size = struct.calcsize(format)
     NULL = '\x00'
+    if not os.path.isfile(file_name):
+        return
     file = open(file_name, 'rb')
     while True:
         bytes = file.read(size)
