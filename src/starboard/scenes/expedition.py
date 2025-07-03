@@ -2,7 +2,7 @@ import random
 from engine import *
 from .. import resources
 from ..inputs import PlayerInput
-from ..logic.board import Board, generate_random_board, spiral_traversal_oclock
+from ..logic.board import Board, generate_random_board, spiral_traversal_oclock, initial_pos_oclock
 from ..constants import *
 
 STATE_STRATEGY = 1
@@ -30,27 +30,35 @@ class Expedition(Scene):
         # get from context
         screen_rect = context.get_screen_rect()
 
+        self.spaceship_img = pygame.image.load(resources.images.SPACESHIP)
+        self.blue_bg_img = pygame.image.load(resources.images.BLUE_BG)
+        self.cell_dot_blue_img = pygame.image.load(resources.images.CELL_DOT_BLUE)
+
+    def start(self, context: GameContext) -> None:
+        # create controllers
         self.input = PlayerInput(context)
 
         self.state = StateMachineController(context, STATE_STRATEGY)
 
+        self.dice_anim_timer = TimerController(context)
         self.action_anim_timer = TimerController(context)
         self.station_anim_timer = TimerController(context)
         self.obstacle_anim_timer = TimerController(context)
+        self.end_of_turn_timer = TimerController(context)
 
+        # init state
         self.option_selected = 0
         self.turn = TURN_PLAYER_ONE
-        self.position = [(0, 0) for i in range(PLAYER_COUNT)]
+        self.minigames = False
+        self.insufficient = False
+        self.dice_thrown = False
+        self.position = [initial_pos_oclock() for i in range(PLAYER_COUNT)]
         self.items = [[f"Item {i}" for i in range(3)] for p in range(PLAYER_COUNT)]
         self.energy = [10 for i in range(PLAYER_COUNT)]
         self.immunity = [False for i in range(PLAYER_COUNT)]
+        self.disabled = [False for i in range(PLAYER_COUNT)]
         self.max_energy = 10
         self.board = generate_random_board(9, 1, 0) #TODO: usar valores del formulario
-
-    def start(self, context: GameContext) -> None:
-        # init state
-        self.paused_time_elapsed = 0
-        self.time_elapsed = 0
 
         # play music
         pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
@@ -71,10 +79,21 @@ class Expedition(Scene):
                 elif self.option_selected == STRATEGY_OPTION_SHOW_MAP:
                     self.state.transition_to(STATE_SHOW_MAP)
         
-        if self.state.is_current(STATE_THROW_DICE):
-            pass
-        
-        if self.state.is_current(STATE_USE_ITEM):
+        elif self.state.is_current(STATE_THROW_DICE):
+            if not self.dice_thrown:
+                if self.input.is_cancel_button_down():
+                    self.state.transition_to(STATE_STRATEGY)
+                elif self.input.is_confirm_button_down():
+                    self.dice_thrown = True
+                    self.dice_anim_timer.start(3000)
+            elif self.dice_anim_timer.has_finished:
+                k = random.randint(1, 5)
+                if self.energy[self.turn] - k >= 0:
+                    self.state.transition_to(STATE_ACTION)
+                else:
+                    self.insufficient = True
+
+        elif self.state.is_current(STATE_USE_ITEM):
             if self.state.is_entering:
                 self.option_selected = 0
 
@@ -88,11 +107,11 @@ class Expedition(Scene):
             elif self.input.is_cancel_button_down():
                 self.state.transition_to(STATE_STRATEGY)
         
-        if self.state.is_current(STATE_SHOW_MAP):
+        elif self.state.is_current(STATE_SHOW_MAP):
             if self.input.is_confirm_button_down() or self.input.is_cancel_button_down():
                 self.state.transition_to(STATE_STRATEGY)
         
-        if self.state.is_current(STATE_ACTION):
+        elif self.state.is_current(STATE_ACTION):
             if self.state.is_entering:
                 self.action_anim_timer.start(3000) #TODO: establecer duración real
             
@@ -105,7 +124,7 @@ class Expedition(Scene):
                 else:
                     self.state.transition_to(STATE_END_OF_TURN)
         
-        if self.state.is_current(STATE_STATION):
+        elif self.state.is_current(STATE_STATION):
             if self.state.is_entering:
                 self.station_anim_timer.start(3000) #TODO: establecer duración real
             
@@ -125,43 +144,69 @@ class Expedition(Scene):
                     self.k = 1 #TODO: calcular pasos para la siguiente estación espacial
                     self.state.transition_to(STATE_ACTION)
 
-        if self.state.is_current(STATE_OBSTACLE):
+        elif self.state.is_current(STATE_OBSTACLE):
             if self.state.is_entering:
-                self.obstacle_anim_timer.start(3000) #TODO: establecer duración real
+                if self.immunity[self.turn]:
+                    self.immunity[self.turn] = False
+                    self.state.transition_to(STATE_END_OF_TURN)
+                else:
+                    self.obstacle_anim_timer.start(3000) #TODO: establecer duración real
             
             if self.obstacle_anim_timer.has_finished:
                 if self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_DEBRIS):
-                    self.energy[self.turn] = min(self.energy[self.turn] + 10, self.max_energy)
-                    self.state.transition_to(STATE_END_OF_TURN)
-                elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_METEORITE):
-                    self.k = 1 #TODO: calcular pasos para el siguiente sector desocupado
+                    self.k = -1 #TODO: calcular pasos hacia atras para retroceder un sector
                     self.state.transition_to(STATE_ACTION)
+                elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_METEORITE):
+                    self.disabled[self.turn] = True
+                    self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_ASTEROID):
-                    self.state.transition_to(STATE_THROW_DICE)
+                    self.energy[self.turn] = max(self.energy[self.turn] - 3, 0)
+                    self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_COSMIC_RAD):
-                    self.immunity[self.turn] = True
+                    self.energy[self.turn] = max(self.energy[self.turn] - 2, 0)
                     self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_SOLAR_RAD):
-                    self.k = 1 #TODO: calcular pasos para la siguiente estación espacial
+                    self.k = 1 #TODO: calcular pasos hacia atras para retroceder al sector anterior en la diagonal secundaria
                     self.state.transition_to(STATE_ACTION)
+        
+        elif self.state.is_current(STATE_END_OF_TURN):
+            if self.state.is_entering:
+                self.end_of_turn_timer.start(3000)
+            
+            if self.end_of_turn_timer.has_finished:
+                self.turn = (self.turn + 1) % PLAYER_COUNT
+                self.insufficient = False
+                self.option_selected = 0
+                if self.turn == TURN_PLAYER_ONE and self.minigames:
+                    self.state.transition_to(STATE_MINIGAME)
+                else:
+                    self.state.transition_to(STATE_STRATEGY)
+        
+        elif self.state.is_current(STATE_MINIGAME):
+            if self.state.is_entering:
+                self.state.transition_to(STATE_STRATEGY)
 
     def draw(self, context: GameContext) -> None:
-        # get from context
         screen = context.get_screen()
-        screen_rect = context.get_screen_rect()
 
-        # draw wip image
-        screen.blit(self.image_wip, (0, screen_rect.centery - self.image_wip.get_height() // 2))
-        screen.blit(self.text_press_spacebar_anytime, (screen_rect.centerx - self.text_press_spacebar_anytime.get_width() // 2, screen_rect.bottom - self.text_press_spacebar_anytime.get_height() - 20))
-        
-        # draw elapsed time counter
-        seconds_text = self.font_main.render("You've been in here for {} seconds".format(int(self.time_elapsed)), False, "white")
-        screen.blit(seconds_text, (screen_rect.centerx - seconds_text.get_width() // 2, screen_rect.bottom - seconds_text.get_height() - 50))
-        
-        # draw paused elapsed time counter
-        if context.is_paused():
-            paused_seconds_text = self.font_main.render("You've been paused for {} seconds".format(int(self.paused_time_elapsed)), False, "white")
-            screen.blit(paused_seconds_text, (screen_rect.centerx - seconds_text.get_width() // 2, screen_rect.bottom - seconds_text.get_height() - 80))
+        # draw board
+        for i in range(0, 3, +1):
+            for j in range(0, 3, +1):
+                screen.blit(self.blue_bg_img, (i * 512, j * 512))
+        for i in range(0, self.board.size, +1):
+            for j in range(0, self.board.size, +1):
+                cell = self.board.matrix[i][j]
+
+                screen.blit(self.cell_dot_blue_img, (i * 108 + 108 // 2 - 16, j * 108 + 108 // 2 - 16))
+                if cell > 0:
+                    color = "red" if cell > 5 else "blue" if cell > 0 else "black"
+                    pygame.draw.rect(screen, color, (i * 108, j * 108, 108, 108))
+
+        # draw players
+        for i in range(0, PLAYER_COUNT, +1):
+            pos = self.position[i]
+            coords = (pos.col * 108, pos.row * 108)
+            screen.blit(self.spaceship_img, coords)
 
     def exit(self, context: GameContext):
         # stop music

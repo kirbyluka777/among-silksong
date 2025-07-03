@@ -75,14 +75,6 @@ def spiral_traversal_oclock(board: Board, pos: Positioning, steps: int):
 		elif pos.dir == MOVE_DIR_UP:
 			pos.row -= 1
 
-def place_object(tablero, n, cantidad, obj):
-	while cantidad>0:
-		i = random.randint(0, n - 1)
-		j = random.randint(0, n - 1)
-		if tablero[i][j] == 0:
-			tablero[i][j] = obj
-			cantidad-=1
-
 def generate_random_board(size: int, difficulty: int, dir: int):
 	matrix = [[0 for _ in range(size)] for _ in range(size)]
 	if dir == 0:
@@ -111,13 +103,21 @@ def generate_random_board(size: int, difficulty: int, dir: int):
 	board.matrix = matrix
 	return board
 
+def place_object(tablero, n, cantidad, obj):
+	while cantidad>0:
+		i = random.randint(0, n - 1)
+		j = random.randint(0, n - 1)
+		if tablero[i][j] == 0:
+			tablero[i][j] = random.randint(1, 5) if obj == 3 else random.randint(6, 10)
+			cantidad -= 1
+
 def print_board(board: Board):
-	print(f"{"-----"*board.size}")
+	print("-----"*board.size)
 	for i in range(board.size):
 		print("| ", end="")
 		for j in range(board.size):
 			print(f"{board.matrix[i][j]:02}", end=" | ")
-		print(f"\n{"-----"*board.size}")
+		print("\n" + "-----"*board.size)
 
 def test_spiral_traversal(board: Board, initial_pos = None, jumps = None, steps = 1):
 	pos = initial_pos_oclock() if not initial_pos else initial_pos
