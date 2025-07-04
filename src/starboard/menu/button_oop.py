@@ -9,12 +9,12 @@ import os
 pg.init()
 
 BG = pg.image.load("src\\starboard\\menu\\sussy baka.png")
-BG= pg.transform.scale(BG, (1600,900))
+BG= pg.transform.scale(BG, (1280,720))
 #play_button = pg.image.load("play_button.png")
 #play_button = pg.transform.scale(play_button, (200,50))
 # Screen dimensions
-SCREEN_WIDTH = 1600
-SCREEN_HEIGHT = 900
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pg.display.set_caption("AMONG US")
 

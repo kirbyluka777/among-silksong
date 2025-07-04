@@ -15,7 +15,7 @@ class Game:
         pygame.mixer.init()
     
     def init_screen(self):
-        screen = pygame.display.set_mode((1280, 960))
+        screen = pygame.display.set_mode((1280, 720))
         pygame.display.set_caption(self.setup.title)
         return screen
     

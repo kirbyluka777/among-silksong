@@ -34,6 +34,17 @@ class Expedition(Scene):
         self.blue_bg_img = pygame.image.load(resources.images.BLUE_BG)
         self.cell_dot_blue_img = pygame.image.load(resources.images.CELL_DOT_BLUE)
 
+        self.menu_font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+
+        self.text_throw_dice = self.menu_font.render(resources.locale.THROW_DICE, True, "white")
+        self.text_throw_dice_sel = self.menu_font.render(resources.locale.THROW_DICE, True, "yellow")
+
+        self.text_use_item = self.menu_font.render(resources.locale.USE_ITEM, True, "white")
+        self.text_use_item_sel = self.menu_font.render(resources.locale.USE_ITEM, True, "yellow")
+
+        self.text_show_board = self.menu_font.render(resources.locale.SHOW_BOARD, True, "white")
+        self.text_show_board_sel = self.menu_font.render(resources.locale.SHOW_BOARD, True, "yellow")
+
     def start(self, context: GameContext) -> None:
         # create controllers
         self.input = PlayerInput(context)
@@ -98,9 +109,9 @@ class Expedition(Scene):
                 self.option_selected = 0
 
             if self.input.is_up_button_down():
-                self.option_selected = (self.option_selected - 1) % len(items[self.turn])
+                self.option_selected = (self.option_selected - 1) % len(self.items[self.turn])
             elif self.input.is_down_button_down():
-                self.option_selected = (self.option_selected + 1) % len(items[self.turn])
+                self.option_selected = (self.option_selected + 1) % len(self.items[self.turn])
                 
             if self.input.is_confirm_button_down():
                 pass #TODO: aplicar efectos de las cartas
@@ -207,6 +218,23 @@ class Expedition(Scene):
             pos = self.position[i]
             coords = (pos.col * 108, pos.row * 108)
             screen.blit(self.spaceship_img, coords)
+
+        # draw menu
+        if self.state.is_current(STATE_STRATEGY):
+            screen.blit(self.text_throw_dice_sel if self.option_selected == 0 else self.text_throw_dice, (100, 600))
+            screen.blit(self.text_use_item_sel if self.option_selected == 1 else self.text_use_item, (100, 630))
+            screen.blit(self.text_show_board_sel if self.option_selected == 2 else self.text_show_board, (100, 660))
+
+        if self.state.is_current(STATE_THROW_DICE):
+            pass
+
+        if self.state.is_current(STATE_USE_ITEM):
+            for x in range(len(self.items)):
+                screen.blit()
+            pass
+
+        if self.state.is_current(STATE_SHOW_MAP):
+            pass
 
     def exit(self, context: GameContext):
         # stop music

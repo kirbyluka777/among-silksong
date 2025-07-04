@@ -1,6 +1,6 @@
 ROUND = "Ronda"
 TURN = "Turno"
-THROW_DICE = "Throw Dice"
+THROW_DICE = "Tirar dado"
 USE_ITEM = "Usar Item"
 SHOW_BOARD = "Mostrar Tablero"
 PLAYER = "Jugador"
