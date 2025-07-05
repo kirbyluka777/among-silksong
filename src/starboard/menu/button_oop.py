@@ -2,8 +2,11 @@ import pygame as pg
 from box import InputBox
 from box import Button
 import sys
-import struct
 import os
+import saveload
+from team import Team
+from team import Game
+from team import Country
 
 # Initialize Pygame
 pg.init()
@@ -29,16 +32,6 @@ BRIGHT_RED = "#213555"
 BOX_WIDTH = 140
 BOX_HEIGHT = 32
 
-class Game:
-    pass
-
-class Team:
-    def __init__(self, name, email, password):#, country, ods
-        self.name = name # 20 caracteres
-        self.email = email # 
-        self.password = password
-
-
 class TitleScreen:
     def __init__(self, game:Game):
         self.game = game
@@ -50,7 +43,7 @@ class TitleScreen:
 
         self.button_play = Button((self.global_x,self.global_y), (200,50), GREEN, BRIGHT_GREEN,'Hola')
         self.button_registro = Button((self.global_x,self.global_y+80), (200,50), WHITE, GREEN, 'Registrar equpo', lambda: game.change_screen('registr')) #No se como cambiar pantalla
-        self.button_options = Button((self.global_x,self.global_y+160), (200, 70), '#ffffff', '#00fdfd','OPCIONES')
+        self.button_options = Button((self.global_x,self.global_y+160), (200, 70), '#ffffff', '#00fdfd','OPCIONES', lambda: game.change_screen('options'))
         self.button_quit = Button((self.global_x,self.global_y+240), (200, 70), RED, BRIGHT_RED,"QUIT", lambda: game.quit_game())
 
         self.buttons = [self.button_play,
@@ -69,6 +62,59 @@ class TitleScreen:
         for button in self.buttons:
             button.draw(screen)
 
+class OptionScreen():
+    def __init__(self,game:Game):
+        self.pais = False
+        self.game = game
+        self.button_volume = Button((SCREEN_WIDTH//2,200), (140,32), WHITE, RED, 'Volumen')
+        self.button_registrar = Button((SCREEN_WIDTH//2,250), (140,32), WHITE, RED, 'Registrar pais', self.toggle_countries)
+        self.button_done = Button((SCREEN_WIDTH // 2 + 200,350), (140,32), WHITE, RED, 'Listo', self.register_country)
+        self.button_back = Button((100,SCREEN_HEIGHT - 100), (140,32), WHITE, RED, 'Back', lambda: game.change_screen("title"))
+        
+        self.input_code = InputBox((SCREEN_WIDTH // 2 - 200,350), (BOX_WIDTH, BOX_HEIGHT), 'Codigo')
+        self.input_name = InputBox((SCREEN_WIDTH // 2, 350), (BOX_WIDTH, BOX_HEIGHT), 'Nombre')
+
+        self.buttons =[self.button_volume,
+                       self.button_registrar,
+                       self.button_back]
+
+        self.input_boxes = [self.input_code,
+                            self.input_name]
+
+    def handle_event(self, event):
+        for box in self.input_boxes:
+            box.handle_event(event)
+        for button in self.buttons:
+            button.handle_event(event)
+        if self.pais:
+            self.button_done.handle_event(event)
+    
+    def draw(self, screen):
+        screen.fill(WHITE)
+        screen.blit(BG,(0,0))
+        for button in self.buttons:
+            button.draw(screen)
+        if self.pais:
+            for box in self.input_boxes:
+                box.draw(screen)
+            self.button_done.draw(screen)
+    
+    def toggle_countries(self):
+        self.pais = False if self.pais else True
+    
+    def register_country(self):
+        code  = self.input_code.text
+        name = self.input_name.text
+
+        if code and name:
+            new_country = Country(code,name)
+            self.game.countries.append(new_country)
+            saveload.save_country(new_country)
+            print(f'registrado: {new_country.name}\n'
+                  f'codigo: {new_country.code}')
+        else:
+            print("No registrado")
+        self.toggle_countries()
 
 class RegistroScreen():
     def __init__(self,game:Game):
@@ -105,43 +151,15 @@ class RegistroScreen():
         if name and email and password:
             new_team = Team(name,email,password)
             self.game.teams.append(new_team)
-            save_binary('equipos.bin', new_team,'20s50s8s')
+            saveload.save_team(new_team)
             print(f'registrado: {new_team.name}\n'
                   f'correo: {new_team.email}\n'
                   f'contrasena: {new_team.password}')
+            self.input_name.text = self.input_email.text = self.input_password.text = ''
+            for box in self.input_boxes:
+                box.txt_surface = pg.font.SysFont(None, 32).render(box.text, True, box.color)
         else:
             print("No registrado")
-
-def save_binary(file_name, data, format): # solo funciona para team claramente
-    file = open(file_name,"ab")
-
-    name = data.name.encode('utf-8')
-    email = data.email.encode('utf-8')
-    password = data.password.encode('utf-8')
-    packed_data = struct.pack(format, name, email, password)
-    
-    file.write(packed_data)
-
-    file.close()
-
-def load_binary(file_name, game, format):
-    size = struct.calcsize(format)
-    NULL = '\x00'
-    if not os.path.isfile(file_name):
-        return
-    file = open(file_name, 'rb')
-    while True:
-        bytes = file.read(size)
-        if not bytes:
-            break
-        
-        name, email, password = struct.unpack(format, bytes)
-        name = name.decode('utf-8').strip(NULL)
-        email= email.decode('utf-8').strip(NULL)
-        password.decode('utf-8').strip(NULL)
-        game.teams.append(Team(name,email,password))
-
-    file.close()
 
 class Game:
     def __init__(self):
@@ -151,15 +169,17 @@ class Game:
         self.running = True
 
         self.teams = []
+        self.countries = []
 
-        load_binary('equipos.bin',self,'20s50s8s')
+        saveload.load_team(self)
+        saveload.load_country(self)
 
         print(*(team.name for team in self.teams)) # amo la programacion orientada a objetos
 
         self.screens = {
             "title": TitleScreen(self),
-            "registr": RegistroScreen(self)
-            #"options": OptionsScreen(self), Volumen, opcion de agregar un pais
+            "registr": RegistroScreen(self),
+            "options": OptionScreen(self)#, Volumen, opcion de agregar un pais
             #"play": La pantalla en la que se van a elegir la configuracion de la partida
             #"tablero": La pantalla del propio juego
         }
