@@ -51,7 +51,7 @@ def initial_pos_counteroclock(board: Board):
 	pos.dir = MOVE_DIR_LEFT
 	return pos
 
-def spiral_traversal_oclock(board: Board, pos: Positioning, steps: int):
+def spiral_traversal(board: Board, pos: Positioning, steps: int):
 	for i in range(steps):
 		if pos.dir == MOVE_DIR_RIGHT and pos.col >= board.size - pos.hturns // 2 - 1:
 			pos.vturns += 1
@@ -124,7 +124,7 @@ def test_spiral_traversal(board: Board, initial_pos = None, jumps = None, steps 
 	jumps = board.size**2 // steps if not jumps else jumps
 	for i in range(board.size**2):
 		board.matrix[pos.row][pos.col] = i + 1
-		spiral_traversal_oclock(board, pos, steps)
+		spiral_traversal(board, pos, steps)
 
 if __name__ == "__main__":
 	n = 9 #int(input("n: "))

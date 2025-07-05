@@ -2,7 +2,7 @@ import random
 from engine import *
 from .. import resources
 from ..inputs import PlayerInput
-from ..logic.board import Board, generate_random_board, spiral_traversal_oclock, initial_pos_oclock
+from ..logic.board import Board, generate_random_board, spiral_traversal, initial_pos_oclock
 from ..constants import *
 
 STATE_STRATEGY = 1
@@ -83,6 +83,7 @@ class Expedition(Scene):
         self.disabled = [False for i in range(PLAYER_COUNT)]
         self.max_energy = 10
         self.board = generate_random_board(9, 1, 0) #TODO: usar valores del formulario
+        self.camera_pos = (0, 0)
 
         # play music
         pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
@@ -149,8 +150,12 @@ class Expedition(Scene):
                 self.action_anim_timer.start(500)
             
             if self.dice_result != 0 and self.action_anim_timer.has_finished:
-                spiral_traversal_oclock(self.board, self.position[self.turn], 1)
-                self.dice_result = self.dice_result - 1
+                if self.dice_result > 0:
+                    spiral_traversal(self.board, self.position[self.turn], +1)
+                    self.dice_result -= 1
+                else:
+                    spiral_traversal(self.board, self.position[self.turn], -1)
+                    self.dice_result += 1
                 self.action_anim_timer.start(500)
 
             if self.dice_result == 0  and self.action_anim_timer.has_finished:
@@ -223,6 +228,9 @@ class Expedition(Scene):
             if self.state.is_entering:
                 self.state.transition_to(STATE_STRATEGY)
 
+        self.current_player_pos = self.position[self.turn]
+        self.camera_pos = (self.current_player_pos.col * 108 + 54, self.current_player_pos.row * 108 + 54)
+
         self.state.finish_update()
 
     def draw(self, context: GameContext) -> None:
@@ -235,16 +243,19 @@ class Expedition(Scene):
         for i in range(0, self.board.size, +1):
             for j in range(0, self.board.size, +1):
                 cell = self.board.matrix[i][j]
-
-                screen.blit(self.cell_dot_blue_img, (i * 108 + 108 // 2 - 16, j * 108 + 108 // 2 - 16))
                 if cell > 0:
                     color = "red" if cell > 5 else "blue" if cell > 0 else "black"
-                    pygame.draw.rect(screen, color, (i * 108, j * 108, 108, 108))
+                    coords = self.coords_by_camera(screen, (i * 108, j * 108))
+                    pygame.draw.rect(screen, color, (coords[0], coords[1], 108, 108))
+                coords = self.coords_by_camera(screen, (i * 108 + 108 // 2 - 16, j * 108 + 108 // 2 - 16))
+                screen.blit(self.cell_dot_blue_img, coords)
 
         # draw players
         for i in range(0, PLAYER_COUNT, +1):
             pos = self.position[i]
-            coords = (pos.col * 108, pos.row * 108)
+            offset_x = 27 if i == TURN_PLAYER_ONE else -27
+            offset_y = -27 if i == TURN_PLAYER_ONE else 27
+            coords = self.coords_by_camera(screen, (pos.col * 108 + offset_x, pos.row * 108 + offset_y))
             screen.blit(self.spaceship_img, coords)
         
         # draw dice
@@ -252,8 +263,8 @@ class Expedition(Scene):
             dice = self.dice[self.dice_result - 1]
             dice_width = dice.get_width()
             if not self.dice_thrown_timer.has_started or self.dice_thrown_timer.ticks_elapsed // 250 % 2 == 0 and self.dice_thrown_timer.ticks_elapsed < 2000:
-                screen.blit(dice, (screen.get_width() // 2 - dice_width // 2, screen.get_height() // 2 - dice_width // 2))
-        
+                screen.blit(dice, (screen.get_width() // 2 - dice_width // 2, screen.get_height() - dice.get_height() - 50))
+
         # draw turn indicator
         turn_text = self.text_player_turn[self.turn]
         turn_text_box_width = turn_text.get_width() + 50 * 2
@@ -265,8 +276,8 @@ class Expedition(Scene):
 
         # draw menu
         if self.state.is_current(STATE_STRATEGY):
-            left = 100
-            top = 500
+            left = 300
+            top = 400
             row = 40
             row_margin_top = 4
             row_margin_left = 10
@@ -290,3 +301,9 @@ class Expedition(Scene):
     def exit(self, context: GameContext):
         # stop music
         pygame.mixer.music.stop()
+
+    def coords_by_camera(self, screen: pygame.Surface, coords: tuple[int, int]) -> tuple[int, int]:
+        x = self.camera_pos[0] - screen.get_width() // 2
+        y = self.camera_pos[1] - screen.get_height() // 2
+        new_coords = (coords[0] - x, coords[1] - y)
+        return new_coords
