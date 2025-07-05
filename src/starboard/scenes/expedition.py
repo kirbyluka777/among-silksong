@@ -15,8 +15,8 @@ STATE_OBSTACLE = 7
 STATE_END_OF_TURN = 8
 STATE_MINIGAME = 9
 
-TURN_PLAYER_ONE = 1
-TURN_PLAYER_TWO = 2
+TURN_PLAYER_ONE = 0
+TURN_PLAYER_TWO = 1
 
 STRATEGY_OPTION_THROW_DICE = 0
 STRATEGY_OPTION_USE_ITEM = 1
@@ -33,25 +33,38 @@ class Expedition(Scene):
         self.spaceship_img = pygame.image.load(resources.images.SPACESHIP)
         self.blue_bg_img = pygame.image.load(resources.images.BLUE_BG)
         self.cell_dot_blue_img = pygame.image.load(resources.images.CELL_DOT_BLUE)
+        self.dice = [
+            pygame.image.load(resources.images.DICE_1),
+            pygame.image.load(resources.images.DICE_2),
+            pygame.image.load(resources.images.DICE_3),
+            pygame.image.load(resources.images.DICE_4),
+            pygame.image.load(resources.images.DICE_5),
+            pygame.image.load(resources.images.DICE_6)
+        ]
 
         self.menu_font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
 
         self.text_throw_dice = self.menu_font.render(resources.locale.THROW_DICE, True, "white")
-        self.text_throw_dice_sel = self.menu_font.render(resources.locale.THROW_DICE, True, "yellow")
+        self.text_throw_dice_sel = self.menu_font.render(resources.locale.THROW_DICE, True, resources.colors.ui_text_primary)
 
         self.text_use_item = self.menu_font.render(resources.locale.USE_ITEM, True, "white")
-        self.text_use_item_sel = self.menu_font.render(resources.locale.USE_ITEM, True, "yellow")
+        self.text_use_item_sel = self.menu_font.render(resources.locale.USE_ITEM, True, resources.colors.ui_text_primary)
 
         self.text_show_board = self.menu_font.render(resources.locale.SHOW_BOARD, True, "white")
-        self.text_show_board_sel = self.menu_font.render(resources.locale.SHOW_BOARD, True, "yellow")
+        self.text_show_board_sel = self.menu_font.render(resources.locale.SHOW_BOARD, True, resources.colors.ui_text_primary)
+
+        self.text_player_turn = [
+            self.menu_font.render(resources.locale.PLAYER_TURN_FMT.format(i + 1), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
+        ]
 
     def start(self, context: GameContext) -> None:
         # create controllers
         self.input = PlayerInput(context)
 
         self.state = StateMachineController(context, STATE_STRATEGY)
-
-        self.dice_anim_timer = TimerController(context)
+        
+        self.dice_rolling_timer = TimerController(context)
+        self.dice_thrown_timer = TimerController(context)
         self.action_anim_timer = TimerController(context)
         self.station_anim_timer = TimerController(context)
         self.obstacle_anim_timer = TimerController(context)
@@ -62,7 +75,7 @@ class Expedition(Scene):
         self.turn = TURN_PLAYER_ONE
         self.minigames = False
         self.insufficient = False
-        self.dice_thrown = False
+        self.dice_result = 0
         self.position = [initial_pos_oclock() for i in range(PLAYER_COUNT)]
         self.items = [[f"Item {i}" for i in range(3)] for p in range(PLAYER_COUNT)]
         self.energy = [10 for i in range(PLAYER_COUNT)]
@@ -74,8 +87,11 @@ class Expedition(Scene):
         # play music
         pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
         pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.5)
 
     def update(self, context: GameContext) -> None:
+        self.state.init_update()
+
         if self.state.is_current(STATE_STRATEGY):
             if self.input.is_up_button_down():
                 self.option_selected = (self.option_selected - 1) % STRATEGY_OPTIONS
@@ -91,15 +107,21 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_SHOW_MAP)
         
         elif self.state.is_current(STATE_THROW_DICE):
-            if not self.dice_thrown:
+            if self.state.is_entering:
+                self.dice_result = 0
+                self.dice_thrown_timer.reset()
+                self.dice_rolling_timer.start(50)
+
+            if not self.dice_thrown_timer.has_started:
+                if self.dice_rolling_timer.has_finished:
+                    self.dice_result = random.randint(1, 5)
+                    self.dice_rolling_timer.start(50)
                 if self.input.is_cancel_button_down():
                     self.state.transition_to(STATE_STRATEGY)
                 elif self.input.is_confirm_button_down():
-                    self.dice_thrown = True
-                    self.dice_anim_timer.start(3000)
-            elif self.dice_anim_timer.has_finished:
-                k = random.randint(1, 5)
-                if self.energy[self.turn] - k >= 0:
+                    self.dice_thrown_timer.start(2000)
+            elif self.dice_thrown_timer.has_finished:
+                if self.energy[self.turn] - self.dice_result >= 0:
                     self.state.transition_to(STATE_ACTION)
                 else:
                     self.insufficient = True
@@ -124,10 +146,14 @@ class Expedition(Scene):
         
         elif self.state.is_current(STATE_ACTION):
             if self.state.is_entering:
-                self.action_anim_timer.start(3000) #TODO: establecer duración real
+                self.action_anim_timer.start(500)
             
-            if self.action_anim_timer.has_finished:
-                self.position[self.turn] = (0, 0) #TODO: implementar recorrido en espiral
+            if self.dice_result != 0 and self.action_anim_timer.has_finished:
+                spiral_traversal_oclock(self.board, self.position[self.turn], 1)
+                self.dice_result = self.dice_result - 1
+                self.action_anim_timer.start(500)
+
+            if self.dice_result == 0  and self.action_anim_timer.has_finished:
                 if self.board.is_cell_station_at(self.position[self.turn]):
                     self.state.transition_to(STATE_STATION)
                 elif self.board.is_cell_obstacle_at(self.position[self.turn]):
@@ -144,7 +170,7 @@ class Expedition(Scene):
                     self.energy[self.turn] = min(self.energy[self.turn] + 10, self.max_energy)
                     self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_SAKAAR):
-                    self.k = 1 #TODO: calcular pasos para el siguiente sector desocupado
+                    self.dice_result = 1 #TODO: calcular pasos para el siguiente sector desocupado
                     self.state.transition_to(STATE_ACTION)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_EGO):
                     self.state.transition_to(STATE_THROW_DICE)
@@ -152,7 +178,7 @@ class Expedition(Scene):
                     self.immunity[self.turn] = True
                     self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_XANDAR):
-                    self.k = 1 #TODO: calcular pasos para la siguiente estación espacial
+                    self.dice_result = 1 #TODO: calcular pasos para la siguiente estación espacial
                     self.state.transition_to(STATE_ACTION)
 
         elif self.state.is_current(STATE_OBSTACLE):
@@ -165,7 +191,7 @@ class Expedition(Scene):
             
             if self.obstacle_anim_timer.has_finished:
                 if self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_DEBRIS):
-                    self.k = -1 #TODO: calcular pasos hacia atras para retroceder un sector
+                    self.dice_result = -1 #TODO: calcular pasos hacia atras para retroceder un sector
                     self.state.transition_to(STATE_ACTION)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_METEORITE):
                     self.disabled[self.turn] = True
@@ -177,7 +203,7 @@ class Expedition(Scene):
                     self.energy[self.turn] = max(self.energy[self.turn] - 2, 0)
                     self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_SOLAR_RAD):
-                    self.k = 1 #TODO: calcular pasos hacia atras para retroceder al sector anterior en la diagonal secundaria
+                    self.dice_result = -1 #TODO: calcular pasos hacia atras para retroceder al sector anterior en la diagonal secundaria
                     self.state.transition_to(STATE_ACTION)
         
         elif self.state.is_current(STATE_END_OF_TURN):
@@ -196,6 +222,8 @@ class Expedition(Scene):
         elif self.state.is_current(STATE_MINIGAME):
             if self.state.is_entering:
                 self.state.transition_to(STATE_STRATEGY)
+
+        self.state.finish_update()
 
     def draw(self, context: GameContext) -> None:
         screen = context.get_screen()
@@ -218,12 +246,35 @@ class Expedition(Scene):
             pos = self.position[i]
             coords = (pos.col * 108, pos.row * 108)
             screen.blit(self.spaceship_img, coords)
+        
+        # draw dice
+        if self.state.is_current(STATE_THROW_DICE):
+            dice = self.dice[self.dice_result - 1]
+            dice_width = dice.get_width()
+            if not self.dice_thrown_timer.has_started or self.dice_thrown_timer.ticks_elapsed // 250 % 2 == 0 and self.dice_thrown_timer.ticks_elapsed < 2000:
+                screen.blit(dice, (screen.get_width() // 2 - dice_width // 2, screen.get_height() // 2 - dice_width // 2))
+        
+        # draw turn indicator
+        turn_text = self.text_player_turn[self.turn]
+        turn_text_box_width = turn_text.get_width() + 50 * 2
+        pygame.draw.rect(screen, "white", (screen.get_width() // 2 - turn_text_box_width // 2, 0, turn_text_box_width, 32), border_bottom_left_radius=10, border_bottom_right_radius=10)
+        screen.blit(turn_text, (screen.get_width() // 2 - turn_text.get_width() // 2, 4))
+
+        # draw state hint
+        #TODO: mostrar mensaje de estado actual
 
         # draw menu
         if self.state.is_current(STATE_STRATEGY):
-            screen.blit(self.text_throw_dice_sel if self.option_selected == 0 else self.text_throw_dice, (100, 600))
-            screen.blit(self.text_use_item_sel if self.option_selected == 1 else self.text_use_item, (100, 630))
-            screen.blit(self.text_show_board_sel if self.option_selected == 2 else self.text_show_board, (100, 660))
+            left = 100
+            top = 500
+            row = 40
+            row_margin_top = 4
+            row_margin_left = 10
+            pygame.draw.rect(screen, resources.colors.ui_bg_primary, (left - 4, top - 4, 200 + 8, row * 3), border_radius=10)
+            pygame.draw.rect(screen, "white", (left, top + row * self.option_selected, 200, 32), border_radius=10)
+            screen.blit(self.text_throw_dice_sel if self.option_selected == 0 else self.text_throw_dice, (left + row_margin_left, top + row_margin_top))
+            screen.blit(self.text_use_item_sel if self.option_selected == 1 else self.text_use_item, (left + row_margin_left, top + row + row_margin_top))
+            screen.blit(self.text_show_board_sel if self.option_selected == 2 else self.text_show_board, (left + row_margin_left, top + row * 2 + row_margin_top))
 
         if self.state.is_current(STATE_THROW_DICE):
             pass

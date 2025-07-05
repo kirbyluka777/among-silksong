@@ -15,8 +15,13 @@ class TimerController(ControllerBase):
 
     def start(self, duration: int | None = None):
         target_duration = self.duration or duration
-        if not target_duration:
+        if target_duration:
+            self.duration = target_duration
             self.start_ticks = self.context.get_current_ticks()
+    
+    def reset(self):
+        self.start_ticks = None
+        self.duration = None
 
     @property
     def started_at(self):
@@ -30,5 +35,9 @@ class TimerController(ControllerBase):
             return None
     
     @property
+    def has_started(self):
+        return self.start_ticks is not None
+    
+    @property
     def has_finished(self):
-        return not self.start_ticks and self.ticks_elapsed >= self.duration
+        return self.start_ticks and self.ticks_elapsed >= self.duration

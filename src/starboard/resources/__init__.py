@@ -4,3 +4,4 @@ from . import music
 from . import sounds
 from . import sprites
 from . import locale
+from . import colors
