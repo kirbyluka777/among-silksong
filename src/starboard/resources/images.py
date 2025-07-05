@@ -12,3 +12,9 @@ DICE_3 = image("dice/3.png")
 DICE_4 = image("dice/4.png")
 DICE_5 = image("dice/5.png")
 DICE_6 = image("dice/6.png")
+
+SUS_1 = image("sus/1.png")
+SUS_2 = image("sus/2.png")
+
+ICON_ENERGY = image("icons/energy.png")
+ICON_SHIELD = image("icons/shield.png")
