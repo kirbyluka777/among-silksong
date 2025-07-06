@@ -7,6 +7,9 @@ import saveload
 from team import Team
 from team import Game
 from team import Country
+import team
+from logic import country
+import re
 
 # Initialize Pygame
 pg.init()
@@ -42,7 +45,7 @@ class TitleScreen:
         self.title = pg.font.SysFont('Arial', 60).render(self.title_text,True,'#ffffff')
 
         self.button_play = Button((self.global_x,self.global_y), (200,50), GREEN, BRIGHT_GREEN,'Hola')
-        self.button_registro = Button((self.global_x,self.global_y+80), (200,50), WHITE, GREEN, 'Registrar equpo', lambda: game.change_screen('registr')) #No se como cambiar pantalla
+        self.button_registro = Button((self.global_x,self.global_y+80), (200,50), WHITE, GREEN, 'Registrar equipo', lambda: game.change_screen('registr')) #No se como cambiar pantalla
         self.button_options = Button((self.global_x,self.global_y+160), (200, 70), '#ffffff', '#00fdfd','OPCIONES', lambda: game.change_screen('options'))
         self.button_quit = Button((self.global_x,self.global_y+240), (200, 70), RED, BRIGHT_RED,"QUIT", lambda: game.quit_game())
 
@@ -107,11 +110,15 @@ class OptionScreen():
         name = self.input_name.text
 
         if code and name:
-            new_country = Country(code,name)
-            self.game.countries.append(new_country)
-            saveload.save_country(new_country)
-            print(f'registrado: {new_country.name}\n'
-                  f'codigo: {new_country.code}')
+            countries=country.read_countries()
+            if (code in countries) or (name in countries):
+                print("Pais ya existente")
+            else:
+                new_country = Country(code,name)
+                self.game.countries.append(new_country)
+                saveload.save_country(new_country)
+                print(f'registrado: {new_country.name}\n'
+                    f'codigo: {new_country.code}')
         else:
             print("No registrado")
         self.toggle_countries()
@@ -142,13 +149,15 @@ class RegistroScreen():
             box.draw(screen)
         self.button_back.draw(screen)
         self.button_registrar.draw(screen)
-    
+
+
     def register_team(self):
         name = self.input_name.text
         email  = self.input_email.text
         password = self.input_password.text
 
         if name and email and password:
+            password=team.verification(password)
             new_team = Team(name,email,password)
             self.game.teams.append(new_team)
             saveload.save_team(new_team)

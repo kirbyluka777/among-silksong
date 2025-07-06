@@ -17,14 +17,19 @@ def save_country(country):
 def read_countries():
 	countries=[]
 	with open(COUNTRY_FILE,'rb') as file:
-		EOF=False
+		EOF = False
 		while not EOF:
-			data_bytes=file.read(COUNTRY_SIZE)
+			data_bytes = file.read(COUNTRY_SIZE)
 			if not data_bytes:
-				EOF=True
+				EOF = True
 			else:
 				data=struct.unpack(COUNTRY_FORMAT,data_bytes)
                 #esta es una nota para paulo del futuro, acuerdate de no hacerlo tan horrible, bobo
-				country=Country(data[0].decode('utf-8'),data[1].decode('utf-8').strip())
+				country_id = data[0].decode('utf-8')
+				country_name = data[1].decode('utf-8').strip()
+				country = Country(country_id,country_name)
 				countries.append(country)
 	return countries
+
+# if __name__=="__main__":
+# 	name=
