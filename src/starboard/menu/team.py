@@ -15,7 +15,7 @@ class Country:
 
 def allowed_chars(password, allow_chars):   # Verificar caracteres invalidos en la contrasena
     for caracter in password:
-        if not (caracter.isalnum() or caracter in allow_chars):
+        if not (caracter.isalnum() or caracter in allow_chars): #esto tambien
             return False
     return True
 
@@ -53,7 +53,7 @@ def verification(password):     #Verificar la contrasena
             print("A su contraseña le faltan letras mayusculas")
             password = input("Ingrese una nueva contraseña: ")
             error = True
-
+#paulo, no seas imbecil, arregla lo del re no puedes usarlo
         # Repeticion de 3 caracteres
         i = 0
         while i <= len(password) - 3:

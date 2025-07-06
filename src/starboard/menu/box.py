@@ -53,6 +53,19 @@ class InputBox:
         # Blit the rect.
         pg.draw.rect(screen, self.color, self.rect, 2)
 
+class Text:
+    def __init__(self,text:str,pos:tuple, dim:tuple):
+        self.text = text
+        self.rect = pg.Rect(pos[0],pos[1],dim[0],dim[1])
+        self.font = pg.font.SysFont('Arial', 40)
+
+    def draw(self, screen):
+            
+        text_surf = self.font.render(self.text, True, '#ffffff')
+        text_rect = text_surf.get_rect(center=self.rect.center)
+
+        screen.blit(text_surf, text_rect)
+
 class Button:
     def __init__(self, pos:tuple, dim:tuple, inactive_color:str, active_color:str, text:str='', action=None):
         """

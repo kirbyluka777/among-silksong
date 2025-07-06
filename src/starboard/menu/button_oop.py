@@ -1,14 +1,10 @@
 import pygame as pg
-from box import InputBox
-from box import Button
+from box import InputBox,Button,Text
 import sys
 import os
 import saveload
-from team import Team
-from team import Game
-from team import Country
+from team import Team,Game,Country
 import team
-from logic import country
 import re
 
 # Initialize Pygame
@@ -44,13 +40,15 @@ class TitleScreen:
 
         self.title = pg.font.SysFont('Arial', 60).render(self.title_text,True,'#ffffff')
 
-        self.button_play = Button((self.global_x,self.global_y), (200,50), GREEN, BRIGHT_GREEN,'Hola')
-        self.button_registro = Button((self.global_x,self.global_y+80), (200,50), WHITE, GREEN, 'Registrar equipo', lambda: game.change_screen('registr')) #No se como cambiar pantalla
+        self.button_play = Button((self.global_x,self.global_y-80), (200,50), GREEN, BRIGHT_GREEN,'Hola')
+        self.button_registro = Button((self.global_x,self.global_y), (200,50), WHITE, GREEN, 'Registrar equipo', lambda: game.change_screen('registr')) #No se como cambiar pantalla
+        self.button_estadisticas = Button((self.global_x,self.global_y+80), (200,50), WHITE, GREEN,'Estadisticas', lambda: game.change_screen('estadisticas'))
         self.button_options = Button((self.global_x,self.global_y+160), (200, 70), '#ffffff', '#00fdfd','OPCIONES', lambda: game.change_screen('options'))
         self.button_quit = Button((self.global_x,self.global_y+240), (200, 70), RED, BRIGHT_RED,"QUIT", lambda: game.quit_game())
 
         self.buttons = [self.button_play,
                         self.button_registro,
+                        self.button_estadisticas,
                         self.button_options,
                         self.button_quit]
     
@@ -110,10 +108,10 @@ class OptionScreen():
         name = self.input_name.text
 
         if code and name:
-            countries=country.read_countries()
-            if (code in countries) or (name in countries):
-                print("Pais ya existente")
-            else:
+            # countries=country.read_countries()
+            # if (code in countries) or (name in countries):
+            #     print("Pais ya existente")
+            # else:
                 new_country = Country(code,name)
                 self.game.countries.append(new_country)
                 saveload.save_country(new_country)
@@ -122,6 +120,104 @@ class OptionScreen():
         else:
             print("No registrado")
         self.toggle_countries()
+
+class BestStatsScreen():
+    def __init__(self,game:Game):
+        self.game = game
+        self.text = Text("Ingrese el codigo de un pais para ver su mejor recorrido",(400,100),(140,32))
+        self.input_id = InputBox((100, 200), (BOX_WIDTH, BOX_HEIGHT), 'Codigo de Pais')
+        self.button_back = Button((100,SCREEN_HEIGHT - 100), (140,32), WHITE, RED, 'Back', lambda: game.change_screen("estadisticas"))
+        self.button_search = Button((250,200), (100,32), WHITE, RED, 'Buscar', self.id_input())
+        self.input_boxes = [self.input_id]
+
+    def handle_event(self, event):
+        for box in self.input_boxes:
+            box.handle_event(event)
+        self.button_back.handle_event(event)
+        self.button_search.handle_event(event)
+    
+    def draw(self, screen):
+        screen.fill(WHITE)
+        screen.blit(BG,(0,0))
+        for box in self.input_boxes:
+            box.draw(screen)
+        self.button_back.draw(screen)
+        self.button_search.draw(screen)
+        self.text.draw(screen)
+
+    def id_input(self):
+        pass
+
+class StatsScreen():
+    def __init__(self,game:Game):
+        self.game = game
+        self.text = Text("Seleccione la opcion que desee ver",(400,100),(140,32))
+        self.button_best_exp = Button((200,SCREEN_HEIGHT - 500), (140,70), WHITE, RED, 'Mejor expedicion de un pais', lambda: game.change_screen("mejor expedicion de pais"))
+        self.button_team_exp = Button((200,SCREEN_HEIGHT - 400), (140,70), WHITE, RED, 'Expediciones de un equipo', lambda: game.change_screen("expediciones de equipo"))
+        self.button_top10_exp = Button((160,SCREEN_HEIGHT - 300), (140,60), WHITE, RED, 'Top 10 expediciones', lambda: game.change_screen("top 10"))
+        self.button_back = Button((100,SCREEN_HEIGHT - 100), (140,32), WHITE, RED, 'Back', lambda: game.change_screen("title"))
+
+    def handle_event(self, event):
+        self.button_back.handle_event(event)
+        self.button_best_exp.handle_event(event)
+        self.button_team_exp.handle_event(event)
+        self.button_top10_exp.handle_event(event)
+
+
+    def draw(self, screen):
+        screen.fill(WHITE)
+        screen.blit(BG,(0,0))
+        self.button_best_exp.draw(screen)
+        self.button_team_exp.draw(screen)
+        self.button_top10_exp.draw(screen)
+        self.button_back.draw(screen)
+        self.text.draw(screen)
+
+class TeamStatsScreen():
+    def __init__(self,game:Game):
+        self.game = game
+        self.text = Text("Ingrese el codigo de un equipo para ver sus expediciones",(400,100),(140,32))
+        self.input_id = InputBox((100, 200), (BOX_WIDTH, BOX_HEIGHT), 'Codigo de Equipo')
+        self.button_back = Button((100,SCREEN_HEIGHT - 100), (140,32), WHITE, RED, 'Back', lambda: game.change_screen("estadisticas"))
+        self.button_search = Button((250,200), (100,32), WHITE, RED, 'Buscar', self.id_input())
+        self.input_boxes = [self.input_id]
+
+    def handle_event(self, event):
+        for box in self.input_boxes:
+            box.handle_event(event)
+        self.button_back.handle_event(event)
+        self.button_search.handle_event(event)
+    
+    def draw(self, screen):
+        screen.fill(WHITE)
+        screen.blit(BG,(0,0))
+        for box in self.input_boxes:
+            box.draw(screen)
+        self.button_back.draw(screen)
+        self.button_search.draw(screen)
+        self.text.draw(screen)
+
+    def id_input(self):
+        pass
+
+class Top10Screen():
+    def __init__(self,game:Game):
+        self.game = game
+        self.text = Text("Top 10 de las mejores expediciones",(400,100),(140,32))
+        self.button_back = Button((100,SCREEN_HEIGHT - 100), (140,32), WHITE, RED, 'Back', lambda: game.change_screen("estadisticas"))
+
+    def handle_event(self, event):
+        self.button_back.handle_event(event)
+    
+    def draw(self, screen):
+        screen.fill(WHITE)
+        screen.blit(BG,(0,0))
+        self.button_back.draw(screen)
+        self.text.draw(screen)
+
+    def id_input(self):
+        pass
+
 
 class RegistroScreen():
     def __init__(self,game:Game):
@@ -188,7 +284,12 @@ class Game:
         self.screens = {
             "title": TitleScreen(self),
             "registr": RegistroScreen(self),
-            "options": OptionScreen(self)#, Volumen, opcion de agregar un pais
+            "options": OptionScreen(self),
+            "estadisticas":StatsScreen(self),
+            "mejor expedicion de pais":BestStatsScreen(self),
+            "expediciones de equipo":TeamStatsScreen(self),
+            "top 10":Top10Screen(self)
+            #, Volumen, opcion de agregar un pais
             #"play": La pantalla en la que se van a elegir la configuracion de la partida
             #"tablero": La pantalla del propio juego
         }
