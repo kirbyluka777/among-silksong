@@ -5,6 +5,7 @@ from ..inputs import PlayerInput
 from ..logic.board import Board, generate_random_board, spiral_traversal, initial_pos_oclock
 from ..menu.team import Team
 from ..constants import *
+from..logic.items import Item
 
 STATE_STRATEGY = 0
 STATE_THROW_DICE = 1
@@ -105,7 +106,7 @@ class Expedition(Scene):
         self.insufficient = False
         self.dice_result = 0
         self.position = [initial_pos_oclock() for i in range(PLAYER_COUNT)]
-        self.items = [[f"Item {i}" for i in range(3)] for p in range(PLAYER_COUNT)]
+        self.items = [[Item('More energy', 'fills up  yiur energy') for i in range(10)] for p in range(PLAYER_COUNT)]
         self.max_energy = 15
         self.energy = [self.max_energy for i in range(PLAYER_COUNT)]
         self.immunity = [False for i in range(PLAYER_COUNT)]
@@ -161,18 +162,23 @@ class Expedition(Scene):
             if self.state.is_entering:
                 self.option_selected = 0
 
-            if self.input.is_up_button_down():
-                self.option_selected = (self.option_selected - 1) % len(self.items[self.turn])
-            elif self.input.is_down_button_down():
-                self.option_selected = (self.option_selected + 1) % len(self.items[self.turn])
+            if self.input.is_left_button_down():
+                self.option_selected = (self.option_selected - 1) % len(self.items[self.turn]) if self.items[self.turn] else 0
+            elif self.input.is_right_button_down():
+                self.option_selected = (self.option_selected + 1) % len(self.items[self.turn]) if self.items[self.turn] else 0
                 
             if self.input.is_confirm_button_down():
-                pass #TODO: aplicar efectos de las cartas
+                if self.items[self.turn]:
+                    print(self.items[self.turn][self.option_selected].print_item_data())
+                    self.items[self.turn].pop(self.option_selected)
+                    self.option_selected -= 1 if self.option_selected > 1 else 0
             elif self.input.is_cancel_button_down():
+                self.option_selected = 1
                 self.state.transition_to(STATE_STRATEGY)
         
         elif self.state.is_current(STATE_SHOW_MAP):
             if self.input.is_confirm_button_down() or self.input.is_cancel_button_down():
+                self.option_selected = 2
                 self.state.transition_to(STATE_STRATEGY)
         
         elif self.state.is_current(STATE_ACTION):
@@ -205,8 +211,9 @@ class Expedition(Scene):
                     self.energy[self.turn] = min(self.energy[self.turn] + 10, self.max_energy)
                     self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_SAKAAR):
-                    self.dice_result = 1 #TODO: calcular pasos para el siguiente sector desocupado
-                    self.state.transition_to(STATE_ACTION)
+                    while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
+                        spiral_traversal(self.board, self.position[self.turn], 1)
+                    self.state.transition_to(STATE_END_OF_TURN) #TODO: calcular pasos para el siguiente sector desocupado
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_EGO):
                     self.state.transition_to(STATE_THROW_DICE)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_ASGARD):
@@ -226,8 +233,10 @@ class Expedition(Scene):
             
             if self.obstacle_anim_timer.has_finished:
                 if self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_DEBRIS):
-                    self.dice_result = -1 #TODO: calcular pasos hacia atras para retroceder un sector
-                    self.state.transition_to(STATE_ACTION)
+                    print("debris")
+                    while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
+                        spiral_traversal(self.board, self.position[self.turn], -1) #TODO: calcular pasos hacia atras para retroceder un sector
+                    self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_METEORITE):
                     self.disabled[self.turn] = True
                     self.state.transition_to(STATE_END_OF_TURN)
@@ -348,12 +357,21 @@ class Expedition(Scene):
             pass
 
         if self.state.is_current(STATE_USE_ITEM):
-            for x in range(len(self.items)):
-                screen.blit()
-            pass
+            item_cols = self.option_selected % 5
+            item_rows = self.option_selected // 5
+            pygame.draw.rect(screen, "#b9b9b9", (200 + 30 * item_cols - 16, 400 + 30 * item_rows - 16,32,32))
+            for i, _ in enumerate(self.items[self.turn]):
+                item_cols = i % 5
+                item_rows = i // 5
+                pygame.draw.circle(screen, '#ffffff', (200 + 30 * item_cols, 400 + 30 * item_rows), 10)
 
         if self.state.is_current(STATE_SHOW_MAP):
-            pass
+            for i in range(0, self.board.size, +1):
+                for j in range(0, self.board.size, +1):
+                    cell = self.board.matrix[i][j]
+                    if cell > 0:
+                        color = "red" if cell > 5 else "blue" if cell > 0 else "black"
+                        pygame.draw.rect(screen, color, (j * 32 +50, i * 32+400, 32, 32))
 
     def exit(self, context: GameContext):
         # stop music
