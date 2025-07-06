@@ -10,7 +10,7 @@ import re
 # Initialize Pygame
 pg.init()
 
-BG = pg.image.load("src\\starboard\\menu\\sussy baka.png")
+BG = pg.image.load("assets\\images\\sussy baka.png")
 BG= pg.transform.scale(BG, (1280,720))
 #play_button = pg.image.load("play_button.png")
 #play_button = pg.transform.scale(play_button, (200,50))

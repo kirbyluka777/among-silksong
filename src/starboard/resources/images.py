@@ -3,6 +3,7 @@ from engine.resources.resolution import image
 COCONUT = image("coconut.jpg")
 SPACESHIP = image("spaceship.png")
 BLUE_BG = image("blue_bg.png")
+MENU_BG = image("sussy baka.png")
 CELL_DOT_BLUE = image("cell_dot_blue.png")
 WIP = image("wip.png")
 
@@ -18,3 +19,20 @@ SUS_2 = image("sus/2.png")
 
 ICON_ENERGY = image("icons/energy.png")
 ICON_SHIELD = image("icons/shield.png")
+ICON_DISABLED = image("icons/disabled.png")
+
+CELL_HOME = image("cell/home.png")
+CELL_END = image("cell/end.png")
+CELL_STATION_TITAN = image("cell/station/titan.png")
+CELL_STATION_SAKAAR = image("cell/station/sakaar.png")
+CELL_STATION_EGO = image("cell/station/ego.png")
+CELL_STATION_ASGARD = image("cell/station/asgard.png")
+CELL_STATION_XANDAR = image("cell/station/xandar.png")
+CELL_OBSTACLE_DEBRIS = image("cell/obstacle/debris.png")
+CELL_OBSTACLE_METEORITE = image("cell/obstacle/meteorite.png")
+CELL_OBSTACLE_ASTEROID = image("cell/obstacle/asteroid.png")
+CELL_OBSTACLE_COSMIC_RAD = image("cell/obstacle/cosmic_rad.png")
+CELL_OBSTACLE_SOLAR_RAD = image("cell/obstacle/solar_rad.png")
+
+KEY_ICON_Z = image("keys/Z.png")
+KEY_ICON_M = image("keys/M.png")
