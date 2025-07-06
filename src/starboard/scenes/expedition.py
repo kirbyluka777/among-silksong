@@ -3,17 +3,18 @@ from engine import *
 from .. import resources
 from ..inputs import PlayerInput
 from ..logic.board import Board, generate_random_board, spiral_traversal, initial_pos_oclock
+from ..menu.team import Team
 from ..constants import *
 
-STATE_STRATEGY = 1
-STATE_THROW_DICE = 2
-STATE_USE_ITEM = 3
-STATE_SHOW_MAP = 4
-STATE_ACTION = 5
-STATE_STATION = 6
-STATE_OBSTACLE = 7
-STATE_END_OF_TURN = 8
-STATE_MINIGAME = 9
+STATE_STRATEGY = 0
+STATE_THROW_DICE = 1
+STATE_USE_ITEM = 2
+STATE_SHOW_MAP = 3
+STATE_ACTION = 4
+STATE_STATION = 5
+STATE_OBSTACLE = 6
+STATE_END_OF_TURN = 7
+STATE_MINIGAME = 8
 
 TURN_PLAYER_ONE = 0
 TURN_PLAYER_TWO = 1
@@ -41,6 +42,22 @@ class Expedition(Scene):
             pygame.image.load(resources.images.DICE_5),
             pygame.image.load(resources.images.DICE_6)
         ]
+        self.team_pfp = [
+            pygame.image.load(resources.images.SUS_1),
+            pygame.image.load(resources.images.SUS_2)
+        ]
+        self.teams = [
+            Team("Estados Unidos", "administration@gov.us", "XXX"),
+            Team("Rusia", "administration@gov.ru", "XXX")
+        ]
+        for i in range(0, len(self.team_pfp)):
+            self.team_pfp[i] = pygame.transform.scale(self.team_pfp[i], (64, 64))
+        
+        self.energy_icon_img = pygame.image.load(resources.images.ICON_ENERGY)
+        self.energy_icon_img = pygame.transform.scale(self.energy_icon_img, (32, 32))
+        
+        self.shield_icon_img = pygame.image.load(resources.images.ICON_SHIELD)
+        self.shield_icon_img = pygame.transform.scale(self.shield_icon_img, (32, 32))
 
         self.menu_font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
 
@@ -55,6 +72,17 @@ class Expedition(Scene):
 
         self.text_player_turn = [
             self.menu_font.render(resources.locale.PLAYER_TURN_FMT.format(i + 1), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
+        ]
+        self.text_state = [
+            self.menu_font.render(resources.locale.STATE_STRATEGY_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_THROW_DICE_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_USE_ITEM_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_SHOW_MAP_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_ACTION_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_STATION_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_OBSTACLE_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_END_OF_TURN_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_MINIGAME_MSG, True, resources.colors.ui_text_primary),
         ]
 
     def start(self, context: GameContext) -> None:
@@ -78,10 +106,10 @@ class Expedition(Scene):
         self.dice_result = 0
         self.position = [initial_pos_oclock() for i in range(PLAYER_COUNT)]
         self.items = [[f"Item {i}" for i in range(3)] for p in range(PLAYER_COUNT)]
-        self.energy = [10 for i in range(PLAYER_COUNT)]
+        self.max_energy = 15
+        self.energy = [self.max_energy for i in range(PLAYER_COUNT)]
         self.immunity = [False for i in range(PLAYER_COUNT)]
         self.disabled = [False for i in range(PLAYER_COUNT)]
-        self.max_energy = 10
         self.board = generate_random_board(9, 1, 0) #TODO: usar valores del formulario
         self.camera_pos = (0, 0)
 
@@ -123,9 +151,11 @@ class Expedition(Scene):
                     self.dice_thrown_timer.start(2000)
             elif self.dice_thrown_timer.has_finished:
                 if self.energy[self.turn] - self.dice_result >= 0:
+                    self.energy[self.turn] -= self.dice_result
                     self.state.transition_to(STATE_ACTION)
                 else:
                     self.insufficient = True
+                    self.state.transition_to(STATE_END_OF_TURN)
 
         elif self.state.is_current(STATE_USE_ITEM):
             if self.state.is_entering:
@@ -245,9 +275,9 @@ class Expedition(Scene):
                 cell = self.board.matrix[i][j]
                 if cell > 0:
                     color = "red" if cell > 5 else "blue" if cell > 0 else "black"
-                    coords = self.coords_by_camera(screen, (i * 108, j * 108))
+                    coords = self.coords_by_camera(screen, (j * 108, i * 108))
                     pygame.draw.rect(screen, color, (coords[0], coords[1], 108, 108))
-                coords = self.coords_by_camera(screen, (i * 108 + 108 // 2 - 16, j * 108 + 108 // 2 - 16))
+                coords = self.coords_by_camera(screen, (j * 108 + 108 // 2 - 16, i * 108 + 108 // 2 - 16))
                 screen.blit(self.cell_dot_blue_img, coords)
 
         # draw players
@@ -263,7 +293,7 @@ class Expedition(Scene):
             dice = self.dice[self.dice_result - 1]
             dice_width = dice.get_width()
             if not self.dice_thrown_timer.has_started or self.dice_thrown_timer.ticks_elapsed // 250 % 2 == 0 and self.dice_thrown_timer.ticks_elapsed < 2000:
-                screen.blit(dice, (screen.get_width() // 2 - dice_width // 2, screen.get_height() - dice.get_height() - 50))
+                screen.blit(dice, (screen.get_width() // 2 - dice_width // 2, screen.get_height() * 3/4 - dice.get_height() // 2))
 
         # draw turn indicator
         turn_text = self.text_player_turn[self.turn]
@@ -271,8 +301,35 @@ class Expedition(Scene):
         pygame.draw.rect(screen, "white", (screen.get_width() // 2 - turn_text_box_width // 2, 0, turn_text_box_width, 32), border_bottom_left_radius=10, border_bottom_right_radius=10)
         screen.blit(turn_text, (screen.get_width() // 2 - turn_text.get_width() // 2, 4))
 
-        # draw state hint
-        #TODO: mostrar mensaje de estado actual
+        # draw state indicator
+        state_text = self.text_state[self.state.current_state]
+        state_text_box_width = state_text.get_width() + 50 * 2
+        pygame.draw.rect(screen, "white", (screen.get_width() // 2 - state_text_box_width // 2, screen.get_height() - 32, state_text_box_width, 32), border_top_left_radius=10, border_top_right_radius=10)
+        screen.blit(state_text, (screen.get_width() // 2 - state_text.get_width() // 2, screen.get_height() - state_text.get_height()))
+
+        # draw players hud
+        player_top_left = [
+            (50, 50),  # top left corner
+            (50, screen.get_width() - 300),  # top right corner
+        ]
+        for i in range(0, PLAYER_COUNT, +1):
+            (top, left) = player_top_left[i]
+            player_name = self.teams[i].name
+            player_energy = self.energy[i]
+            player_immunity = self.immunity[i]
+            player_disabled = self.disabled[i]
+            player_pfp = self.team_pfp[i]
+            screen.blit(player_pfp, (left, top))
+            player_name_text = self.menu_font.render(player_name, True, "white")
+            screen.blit(player_name_text, (left + 64 + 8, top + 4))
+            screen.blit(self.energy_icon_img, (left + 64 + 8, top + 32))
+            energy_text = self.menu_font.render(f"{player_energy} / {self.max_energy}", True, "white")
+            screen.blit(energy_text, (left + 64 + 8 + 32 + 8, top + 32))
+            energy_bar_width = player_energy * 64 / self.max_energy
+            pygame.draw.rect(screen, "red", (left + 64 + 8 + 32 + 8, top + 56, 64, 8))
+            pygame.draw.rect(screen, "green", (left + 64 + 8 + 32 + 8, top + 56, energy_bar_width, 8))
+            if player_immunity:
+                screen.blit(self.shield_icon_img, (left + 40, top + 40))
 
         # draw menu
         if self.state.is_current(STATE_STRATEGY):
