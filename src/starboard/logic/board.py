@@ -5,12 +5,12 @@ from typing import Literal, Union
 from ..constants import *
 
 class Positioning:
-    def __init__(self):
-        self.row = 0
-        self.col = 0
-        self.hturns = 0
-        self.vturns = 0
-        self.dir = MOVE_DIR_RIGHT
+    def __init__(self, row: int, col: int, dir: int, hturns: int = 0, vturns: int = 0):
+        self.row = row
+        self.col = col
+        self.dir = dir
+        self.hturns = hturns
+        self.vturns = vturns
 
 BoardMatrix = list[list[list[int]]]
 BoardCoords = Positioning | tuple[int]
@@ -37,39 +37,21 @@ class Board:
     def is_cell_at(self, pos: BoardCoords, cell_type: int):
         return self.cell_at(pos)[1] == cell_type
 
-def initial_pos_oclock():
-    pos = Positioning()
-    pos.row = 0
-    pos.col = 0
-    pos.hturns = 0
-    pos.vturns = 0
-    pos.dir = MOVE_DIR_RIGHT
-    return pos
-
-def initial_pos_counteroclock(board_size: int):
-    pos = Positioning()
-    pos.row = 0
-    pos.col = board_size - 1
-    pos.hturns = 0
-    pos.vturns = 0
-    pos.dir = MOVE_DIR_LEFT
-    return pos
-
 def spiral_traversal(board: Board, pos: Positioning, steps: int):
     if steps > 0:
         for i in range(steps):
             if pos.dir == MOVE_DIR_RIGHT and pos.col >= board.size - pos.hturns // 2 - 1:
                 pos.vturns += 1
-                pos.dir = MOVE_DIR_DOWN
+                pos.dir = MOVE_DIR_DOWN if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_UP
             elif pos.dir == MOVE_DIR_LEFT and pos.col <= pos.hturns // 2:
                 pos.vturns += 1
-                pos.dir = MOVE_DIR_UP
+                pos.dir = MOVE_DIR_UP if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_DOWN
             elif pos.dir == MOVE_DIR_DOWN and pos.row >= board.size - pos.vturns // 2 - 1:
                 pos.hturns += 1
-                pos.dir = MOVE_DIR_LEFT
+                pos.dir = MOVE_DIR_LEFT if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_RIGHT
             elif pos.dir == MOVE_DIR_UP and pos.row <= pos.vturns // 2:
                 pos.hturns += 1
-                pos.dir = MOVE_DIR_RIGHT
+                pos.dir = MOVE_DIR_RIGHT if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_LEFT
                 
             if pos.dir == MOVE_DIR_RIGHT:
                 pos.col += 1
@@ -83,16 +65,16 @@ def spiral_traversal(board: Board, pos: Positioning, steps: int):
         for i in range(steps):
             if pos.dir == MOVE_DIR_RIGHT and pos.col >= board.size - pos.hturns // 2:
                 pos.vturns -= 1
-                pos.dir = MOVE_DIR_DOWN
+                pos.dir = MOVE_DIR_DOWN if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_UP
             elif pos.dir == MOVE_DIR_LEFT and pos.col <= pos.hturns // 2 - 1:
                 pos.vturns -= 1
-                pos.dir = MOVE_DIR_UP
+                pos.dir = MOVE_DIR_UP if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_DOWN
             elif pos.dir == MOVE_DIR_DOWN and pos.row >= board.size - pos.vturns // 2:
                 pos.hturns -= 1
-                pos.dir = MOVE_DIR_LEFT
+                pos.dir = MOVE_DIR_LEFT if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_RIGHT
             elif pos.dir == MOVE_DIR_UP and pos.row <= pos.vturns // 2 - 1:
                 pos.hturns -= 1
-                pos.dir = MOVE_DIR_RIGHT
+                pos.dir = MOVE_DIR_RIGHT if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_LEFT
             
         if pos.dir == MOVE_DIR_RIGHT:
             pos.col += (1 if steps > 0 else -1)
@@ -143,12 +125,18 @@ def generate_random_board(size: int, difficulty: int, dir: int):
     board.difficulty = difficulty
 
     # Enumerar indices de celdas
-    pos = initial_pos_oclock() if board.dir == BOARD_DIR_OCLOCK else initial_pos_counteroclock(board.size)
+    pos = initial_pos(board)
     for i in range(board.size**2):
         board.matrix[pos.row][pos.col][0] = i + 1
         spiral_traversal(board, pos, 1)
 
     return board
+
+def initial_pos(board: Board):
+    if board.dir == BOARD_DIR_OCLOCK:
+        return Positioning(0, 0, MOVE_DIR_RIGHT)
+    else:
+        return Positioning(0, board.size - 1, MOVE_DIR_LEFT)
 
 def board_random_station():
     return random.randint(CELL_STATION_TITAN, CELL_STATION_XANDAR)

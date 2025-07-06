@@ -1,10 +1,10 @@
 import random
 from engine import *
+from ..constants import *
 from .. import resources
 from ..inputs import PlayerInput
-from ..logic.board import Board, generate_random_board, spiral_traversal, initial_pos_oclock
+from ..logic import board
 from ..menu.team import Team
-from ..constants import *
 from .. import globals
 from..logic.items import Item
 
@@ -120,6 +120,9 @@ class Expedition(Scene):
         self.text_team_name = [
             self.menu_font.render(self.teams[i].name, True, "white") for i in range(0, PLAYER_COUNT)
         ]
+        self.text_team_name_primary = [
+            self.menu_font.render(self.teams[i].name, True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
+        ]
         self.text_draft_to_team = [
             self.menu_font.render(resources.locale.DRAFT_TO_PLAYER_FMT.format(self.teams[i].name), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
         ]
@@ -170,11 +173,11 @@ class Expedition(Scene):
         ]
 
     def start(self, context: GameContext) -> None:
-        # create controllers
+        # Crear controladores de lógica
         self.input = PlayerInput(context)
 
         self.state = StateMachineController(context, STATE_DRAFT)
-        
+
         self.dice_rolling_timer = TimerController(context)
         self.draft_completed_timer = TimerController(context)
         self.dice_thrown_timer = TimerController(context)
@@ -183,14 +186,15 @@ class Expedition(Scene):
         self.obstacle_anim_timer = TimerController(context)
         self.end_of_turn_timer = TimerController(context)
 
-        # init state
+        # Inicializar estado
+        self.board = board.generate_random_board(globals.board_size, globals.board_difficulty, globals.board_dir)
         self.option_selected = 0
         self.turn = None
         self.minigames = False
         self.insufficient = False
         self.disabled_now = False
         self.dice_result = [0 for _ in range(PLAYER_COUNT)]
-        self.position = [initial_pos_oclock() for _ in range(PLAYER_COUNT)]
+        self.position = [board.initial_pos(self.board) for _ in range(PLAYER_COUNT)]
         self.items = [[Item('More energy', 'Fills up  your energy') for _ in range(10)] for _ in range(PLAYER_COUNT)]
         self.max_energy = 15
         self.initial_energy = random.randint(5, 15)
@@ -198,10 +202,11 @@ class Expedition(Scene):
         self.immunity = [False for _ in range(PLAYER_COUNT)]
         self.disabled = [False for _ in range(PLAYER_COUNT)]
         self.draft_ready = [False for _ in range(PLAYER_COUNT)]
-        self.board = generate_random_board(globals.board_size, globals.board_difficulty, globals.board_dir)
         self.camera_pos = (0, 0)
 
-        # play music
+        print(globals.board_difficulty)
+
+        # Reproducir música
         pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(0.5)
@@ -210,7 +215,7 @@ class Expedition(Scene):
         keys_down = context.get_keys_down()
         self.state.init_update()
 
-        # Estado de Draft (selección de primer turno)
+        # Estado de selección de primer turno
         if self.state.is_current(STATE_DRAFT):
             # Inicializar estado
             if self.state.is_entering:
@@ -229,7 +234,7 @@ class Expedition(Scene):
                 # Si ya todos presionaron completar el draft
                 if self.draft_ready[TURN_PLAYER_ONE] and self.draft_ready[TURN_PLAYER_TWO]:
                     self.draft_completed_timer.start(2000)
-            
+
             # Después de un tiempo de completar el draft
             elif self.draft_completed_timer.has_finished:
                 # En caso que ambos tenga el mismo dado, se repite el draft
@@ -332,10 +337,10 @@ class Expedition(Scene):
             
             if self.dice_result[self.turn] != 0 and self.action_anim_timer.has_finished:
                 if self.dice_result[self.turn] > 0:
-                    spiral_traversal(self.board, self.position[self.turn], +1)
+                    board.spiral_traversal(self.board, self.position[self.turn], +1)
                     self.dice_result[self.turn] -= 1
                 else:
-                    spiral_traversal(self.board, self.position[self.turn], -1)
+                    board.spiral_traversal(self.board, self.position[self.turn], -1)
                     self.dice_result[self.turn] += 1
                 self.action_anim_timer.start(500)
 
@@ -346,7 +351,7 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_OBSTACLE)
                 else:
                     self.state.transition_to(STATE_END_OF_TURN)
-        
+
         elif self.state.is_current(STATE_STATION):
             if self.state.is_entering:
                 self.station_anim_timer.start(3000)
@@ -357,7 +362,7 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_SAKAAR):
                     while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
-                        spiral_traversal(self.board, self.position[self.turn], 1)
+                        board.spiral_traversal(self.board, self.position[self.turn], 1)
                     self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_EGO):
                     self.state.transition_to(STATE_THROW_DICE)
@@ -375,12 +380,12 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_END_OF_TURN)
                 else:
                     self.obstacle_anim_timer.start(3000)
-            
+
             if self.obstacle_anim_timer.has_finished:
                 # Consecuencia para escombros espaciales
                 if self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_DEBRIS):
                     while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
-                        spiral_traversal(self.board, self.position[self.turn], -1)
+                        board.spiral_traversal(self.board, self.position[self.turn], -1)
                     self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para impacto de meteorito
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_METEORITE):
@@ -399,7 +404,7 @@ class Expedition(Scene):
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_SOLAR_RAD):
                     self.dice_result[self.turn] = -1 #TODO: calcular pasos hacia atras para retroceder al sector anterior en la diagonal secundaria
                     self.state.transition_to(STATE_ACTION)
-        
+
         elif self.state.is_current(STATE_END_OF_TURN):
             if self.state.is_entering:
                 self.end_of_turn_timer.start(3000)
@@ -415,7 +420,7 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_MINIGAME)
                 else:
                     self.state.transition_to(STATE_STRATEGY)
-        
+
         elif self.state.is_current(STATE_MINIGAME):
             if self.state.is_entering:
                 self.state.transition_to(STATE_STRATEGY)
@@ -423,6 +428,8 @@ class Expedition(Scene):
         if self.turn is not None:
             self.current_player_pos = self.position[self.turn]
             self.camera_pos = (self.current_player_pos.col * TILE_SIZE + TILE_SIZE // 2, self.current_player_pos.row * TILE_SIZE + TILE_SIZE // 2)
+        else:
+            self.camera_pos = (TILE_SIZE * self.board.size // 2, TILE_SIZE * self.board.size // 2)
 
         self.state.finish_update()
 
@@ -618,7 +625,7 @@ class Expedition(Scene):
                         pygame.draw.rect(screen, color, (j * 32 +50, i * 32+400, 32, 32))
 
     def exit(self, context: GameContext):
-        # stop music
+        # Detener música
         pygame.mixer.music.stop()
 
     def coords_by_camera(self, screen: pygame.Surface, coords: tuple[int, int]) -> tuple[int, int]:
