@@ -33,3 +33,6 @@ CELL_OBSTACLE_METEORITE = image("cell/obstacle/meteorite.png")
 CELL_OBSTACLE_ASTEROID = image("cell/obstacle/asteroid.png")
 CELL_OBSTACLE_COSMIC_RAD = image("cell/obstacle/cosmic_rad.png")
 CELL_OBSTACLE_SOLAR_RAD = image("cell/obstacle/solar_rad.png")
+
+KEY_ICON_Z = image("keys/Z.png")
+KEY_ICON_M = image("keys/M.png")

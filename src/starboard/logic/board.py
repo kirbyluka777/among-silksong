@@ -111,7 +111,7 @@ def generate_random_board(size: int, difficulty: int, dir: int):
     if dir == 0:
         matrix[0][0][1] = CELL_HOME
     else:
-        matrix[0][size][1] = CELL_HOME
+        matrix[0][size - 1][1] = CELL_HOME
     
     # Definir el punto de fin
     matrix[size//2][size//2][1] = CELL_END

@@ -20,7 +20,7 @@
   - [-] Cada juego que se inicie, representará una expedición o viaje estelar, el cual debe quedar identificado con un código único.
   - [x] El juego se desarrollará en un mapa estelar de N x N sectores, donde N es un número impar entre 5 y 19 inclusive.
   - [-] La dimensión del mapa, será acordado entre los dos participantes.
-  - [ ] El punto de partida será la Tierra (sector 1,1) y el objetivo final será un planeta habitable ubicado en el punto central del mapa, al cual se llegará en un recorrido en espiral.
+  - [x] El punto de partida será la Tierra (sector 1,1) y el objetivo final será un planeta habitable ubicado en el punto central del mapa, al cual se llegará en un recorrido en espiral.
   - [x] Al inicio del juego, a cada equipo, se le asignará aleatoriamente (en un rango de 5 a 15) una cantidad de "unidades de energía".
   - [x] Para el desplazamiento, los jugadores activarán alternadamente los propulsores de sus naves que les permitirá avanzar un número k de sectores en un recorrido en espiral sobre el mapa estelar. Donde k es un número aleatorio entre 1 y 5 inclusive y cada activación de propulsores consume una unidad de energía.
   - [-] El recorrido del mapa, se podrá hacer en sentido horario o antihorario, elegido por los jugadores.
@@ -30,8 +30,8 @@
     - [-] Medio            15                                       15
     - [-] Avanzado         20                                       10
   - [ ] Cada jugador seleccionará a un equipo con el que hará la expedición (para ello debe estar registrados). Cada equipo tendrá asociado un ODS desde su inicio (ejemplo: Orión - Energía Asequible y Limpia). La aplicación, debe permitir la incorporación de nuevos equipos y asociales su ODS.
-  - [ ] Cada sector del mapa se debe identificar con un número consecutivo (1,2, …) en el mapa, que indicará el recorrido en espiral.
-  - [ ] El recorrido lo iniciará el equipo que obtenga el mayor número, entre un par de números aleatorios generados uno por cada equipo, al comienzo del juego.
+  - [x] Cada sector del mapa se debe identificar con un número consecutivo (1,2, …) en el mapa, que indicará el recorrido en espiral.
+  - [x] El recorrido lo iniciará el equipo que obtenga el mayor número, entre un par de números aleatorios generados uno por cada equipo, al comienzo del juego.
   - [-] El mapa se recorrerá en forma de espiral, en sentido horario o sentido antihorario, opción que debe escogerse antes de iniciar el juego.
   - [x] Cada jugador activará sus propulsores de forma alterna y avanzará tantos sectores en el mapa como lo permitan los propulsores.
   - [x] Durante el recorrido se presentarán obstáculos que tendrán consecuencias no favorables para el viaje, estos obstáculos o anomalías espaciales pueden presentarse o encontrarse en un determinado sector, así mismo habrá estaciones espaciales que apoyarán a las naves a completar su recorrido. No todos los sectores tendrán anomalías espaciales ni estaciones espaciales.
@@ -41,16 +41,16 @@
     - [-] Ayudas:
         Estación espacial          Consecuencia
       - [x] Titán                  Recargar 10 unidades de energía
-      - [-] Sakaar                 Avanza al sector más cercano desocupado
-      - [-] Ego                    Activación de propulsores
-      - [-] Asgard                 Inmunidad a la siguiente anomalia espacial
+      - [x] Sakaar                 Avanza al sector más cercano desocupado
+      - [x] Ego                    Activación de propulsores
+      - [x] Asgard                 Inmunidad a la siguiente anomalia espacial
       - [-] Xandar                 Avanza a la estación espacial más cercana ubicada en la diagonal principal del mapa
     - [-] Obstáculos espaciales:
         Anomalía                   Consecuencia
-      - [-] Escombros espaciales   Retrocede un sector
-      - [-] Meteoritos             Sin avance
-      - [-] Impacto de asteroide   Pérdida de 3 unidades de energía
-      - [-] Radiación cósmica      Pérdida de 2 unidad de energía
+      - [x] Escombros espaciales   Retrocede un sector
+      - [x] Meteoritos             Sin avance
+      - [x] Impacto de asteroide   Pérdida de 3 unidades de energía
+      - [x] Radiación cósmica      Pérdida de 2 unidad de energía
       - [-] Radiación solar        Retrocede al sector espacial mas cercano ubicado en la diagonal secundaria del mapa
   - [x] Los sectores que contendrán los estaciones espaciales o anomalías espaciales deben ser escogidas por el sistema de forma aleatoria, según el dificultad del juego (Básico, Medio o Avanzado).
 
@@ -76,6 +76,8 @@
   - [ ] No olvidar incorporar los elementos de ODS, solicitados.
 
 - [ ] Ideas nosotros:
-  - [ ] Mensaje de consecuencia al caer en obstaculo/estación
+  - [x] Mensaje de consecuencia al caer en obstaculo/estación
   - [x] Renderizar nombre de obstaculo/estación
   - [x] Poner de color las naves de cada equipo
+  - [ ] Hacer clickable los botones del menú de juego
+  - [ ] ...
