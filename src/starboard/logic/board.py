@@ -1,166 +1,173 @@
 # Placeholder
 import random
 import math
-import pygame as pg
+from typing import Literal, Union
 from ..constants import *
 
 class Positioning:
-	def init(self):
-		self.row = 0
-		self.col = 0
-		self.hturns = 0
-		self.vturns = 0
-		self.dir = MOVE_DIR_RIGHT
+    def __init__(self):
+        self.row = 0
+        self.col = 0
+        self.hturns = 0
+        self.vturns = 0
+        self.dir = MOVE_DIR_RIGHT
+
+BoardMatrix = list[list[list[int]]]
+BoardCoords = Positioning | tuple[int]
 
 class Board:
-	def init(self):
-		self.matrix = list[int](list[int]())
-		self.size = 0
-		self.dir = BOARD_DIR_OCLOCK
-		self.difficulty = BOARD_DIFFICULTY_EASY
+    def __init__(self, matrix: BoardMatrix = [], size: int = 0, dir: int = BOARD_DIR_OCLOCK, difficulty: int = BOARD_DIFFICULTY_EASY):
+        self.matrix = matrix
+        self.size = size
+        self.dir = dir
+        self.difficulty = difficulty
 
-	def cell_at(self, pos: Positioning):
-		return self.matrix[pos.row][pos.col]
+    def cell_at(self, pos: BoardCoords):
+        row, col = (pos.row, pos.col) if isinstance(pos, Positioning) else (pos[0], pos[1])
+        return self.matrix[row][col]
 
-	def is_cell_station_at(self, pos: Positioning):
-		cell = self.cell_at(pos)
-		return cell > 0 and cell <= 5
+    def is_cell_station_at(self, pos: BoardCoords):
+        cell = self.cell_at(pos)
+        return cell[1] >= CELL_STATION_TITAN and cell[1] <= CELL_STATION_XANDAR
 
-	def is_cell_obstacle_at(self, pos: Positioning):
-		cell = self.cell_at(pos)
-		return cell > 5 and cell <= 10
-	
-	def is_cell_at(self, pos: Positioning, cell_type: int):
-		return self.cell_at(pos) == cell_type
+    def is_cell_obstacle_at(self, pos: BoardCoords):
+        cell = self.cell_at(pos)
+        return cell[1] >= CELL_OBSTACLE_DEBRIS and cell[1] <= CELL_OBSTACLE_SOLAR_RAD
+    
+    def is_cell_at(self, pos: BoardCoords, cell_type: int):
+        return self.cell_at(pos)[1] == cell_type
 
 def initial_pos_oclock():
-	pos = Positioning()
-	pos.row = 0
-	pos.col = 0
-	pos.hturns = 0
-	pos.vturns = 0
-	pos.dir = MOVE_DIR_RIGHT
-	return pos
+    pos = Positioning()
+    pos.row = 0
+    pos.col = 0
+    pos.hturns = 0
+    pos.vturns = 0
+    pos.dir = MOVE_DIR_RIGHT
+    return pos
 
-def initial_pos_counteroclock(board: Board):
-	pos = Positioning()
-	pos.row = board.size - 1
-	pos.col = board.size - 1
-	pos.hturns = 0
-	pos.vturns = 0
-	pos.dir = MOVE_DIR_LEFT
-	return pos
+def initial_pos_counteroclock(board_size: int):
+    pos = Positioning()
+    pos.row = 0
+    pos.col = board_size - 1
+    pos.hturns = 0
+    pos.vturns = 0
+    pos.dir = MOVE_DIR_LEFT
+    return pos
 
 def spiral_traversal(board: Board, pos: Positioning, steps: int):
-	if steps > 0:
-		for i in range(steps):
-			if pos.dir == MOVE_DIR_RIGHT and pos.col >= board.size - pos.hturns // 2 - 1:
-				pos.vturns += 1
-				pos.dir = MOVE_DIR_DOWN
-			elif pos.dir == MOVE_DIR_LEFT and pos.col <= pos.hturns // 2:
-				pos.vturns += 1
-				pos.dir = MOVE_DIR_UP
-			elif pos.dir == MOVE_DIR_DOWN and pos.row >= board.size - pos.vturns // 2 - 1:
-				pos.hturns += 1
-				pos.dir = MOVE_DIR_LEFT
-			elif pos.dir == MOVE_DIR_UP and pos.row <= pos.vturns // 2:
-				pos.hturns += 1
-				pos.dir = MOVE_DIR_RIGHT
-				
-			if pos.dir == MOVE_DIR_RIGHT:
-				pos.col += 1
-			elif pos.dir == MOVE_DIR_LEFT:
-				pos.col -= 1
-			elif pos.dir == MOVE_DIR_DOWN:
-				pos.row += 1
-			elif pos.dir == MOVE_DIR_UP:
-				pos.row -= 1
-	elif steps < 0:
-		for i in range(steps):
-			if pos.dir == MOVE_DIR_RIGHT and pos.col >= board.size - pos.hturns // 2:
-				pos.vturns -= 1
-				pos.dir = MOVE_DIR_DOWN
-			elif pos.dir == MOVE_DIR_LEFT and pos.col <= pos.hturns // 2 - 1:
-				pos.vturns -= 1
-				pos.dir = MOVE_DIR_UP
-			elif pos.dir == MOVE_DIR_DOWN and pos.row >= board.size - pos.vturns // 2:
-				pos.hturns -= 1
-				pos.dir = MOVE_DIR_LEFT
-			elif pos.dir == MOVE_DIR_UP and pos.row <= pos.vturns // 2 - 1:
-				pos.hturns -= 1
-				pos.dir = MOVE_DIR_RIGHT
-			
-		if pos.dir == MOVE_DIR_RIGHT:
-			pos.col += (1 if steps > 0 else -1)
-		elif pos.dir == MOVE_DIR_LEFT:
-			pos.col -= (1 if steps > 0 else -1)
-		elif pos.dir == MOVE_DIR_DOWN:
-			pos.row += (1 if steps > 0 else -1)
-		elif pos.dir == MOVE_DIR_UP:
-			pos.row -= (1 if steps > 0 else -1)
+    if steps > 0:
+        for i in range(steps):
+            if pos.dir == MOVE_DIR_RIGHT and pos.col >= board.size - pos.hturns // 2 - 1:
+                pos.vturns += 1
+                pos.dir = MOVE_DIR_DOWN
+            elif pos.dir == MOVE_DIR_LEFT and pos.col <= pos.hturns // 2:
+                pos.vturns += 1
+                pos.dir = MOVE_DIR_UP
+            elif pos.dir == MOVE_DIR_DOWN and pos.row >= board.size - pos.vturns // 2 - 1:
+                pos.hturns += 1
+                pos.dir = MOVE_DIR_LEFT
+            elif pos.dir == MOVE_DIR_UP and pos.row <= pos.vturns // 2:
+                pos.hturns += 1
+                pos.dir = MOVE_DIR_RIGHT
+                
+            if pos.dir == MOVE_DIR_RIGHT:
+                pos.col += 1
+            elif pos.dir == MOVE_DIR_LEFT:
+                pos.col -= 1
+            elif pos.dir == MOVE_DIR_DOWN:
+                pos.row += 1
+            elif pos.dir == MOVE_DIR_UP:
+                pos.row -= 1
+    elif steps < 0:
+        for i in range(steps):
+            if pos.dir == MOVE_DIR_RIGHT and pos.col >= board.size - pos.hturns // 2:
+                pos.vturns -= 1
+                pos.dir = MOVE_DIR_DOWN
+            elif pos.dir == MOVE_DIR_LEFT and pos.col <= pos.hturns // 2 - 1:
+                pos.vturns -= 1
+                pos.dir = MOVE_DIR_UP
+            elif pos.dir == MOVE_DIR_DOWN and pos.row >= board.size - pos.vturns // 2:
+                pos.hturns -= 1
+                pos.dir = MOVE_DIR_LEFT
+            elif pos.dir == MOVE_DIR_UP and pos.row <= pos.vturns // 2 - 1:
+                pos.hturns -= 1
+                pos.dir = MOVE_DIR_RIGHT
+            
+        if pos.dir == MOVE_DIR_RIGHT:
+            pos.col += (1 if steps > 0 else -1)
+        elif pos.dir == MOVE_DIR_LEFT:
+            pos.col -= (1 if steps > 0 else -1)
+        elif pos.dir == MOVE_DIR_DOWN:
+            pos.row += (1 if steps > 0 else -1)
+        elif pos.dir == MOVE_DIR_UP:
+            pos.row -= (1 if steps > 0 else -1)
 
 def generate_random_board(size: int, difficulty: int, dir: int):
-	matrix = [[0 for _ in range(size)] for _ in range(size)]
-	if dir == 0:
-		matrix[1][1] = 1
-	else:
-		matrix[1][size] = 1
-	matrix[size//2][size//2] = 4
-	obstacles_factor = 0
-	stations_factor = 0
-	match difficulty:
-		case 0:
-			obstacles_factor = 0.1
-			stations_factor = 0.2
-		case 1:
-			obstacles_factor = 0.15
-			stations_factor = 0.15
-		case 2:
-			obstacles_factor = 0.2
-			stations_factor = 0.1
-			
-	place_object(matrix, size, math.floor(size*size*obstacles_factor), 4)
-	place_object(matrix, size, math.floor(size*size*stations_factor), 3)
+    # Inicializar matriz de tablero
+    matrix = [[[0 for _ in range(2)] for _ in range(size)] for _ in range(size)]
+    
+    # Definir el punto de inicio
+    if dir == 0:
+        matrix[0][0][1] = CELL_HOME
+    else:
+        matrix[0][size][1] = CELL_HOME
+    
+    # Definir el punto de fin
+    matrix[size//2][size//2][1] = CELL_END
 
-	board = Board()
-	board.size = size
-	board.matrix = matrix
-	return board
+    # Definir el factor de generacipón aleatoria
+    match difficulty:
+        case 0:
+            obstacles_factor = 0.1
+            stations_factor = 0.2
+        case 1:
+            obstacles_factor = 0.15
+            stations_factor = 0.15
+        case 2:
+            obstacles_factor = 0.2
+            stations_factor = 0.1
+        case _:       
+            obstacles_factor = 0
+            stations_factor = 0
+            
+    # Poner obstaculos y estaciones aleatoriamente
+    board_place_object(matrix, size, math.floor(size*size*obstacles_factor), board_random_obstacle)
+    board_place_object(matrix, size, math.floor(size*size*stations_factor), board_random_station)
 
-def place_object(tablero, n, cantidad, obj):
-	while cantidad>0:
-		i = random.randint(0, n - 1)
-		j = random.randint(0, n - 1)
-		if tablero[i][j] == 0 and not ((i==0 and j==0) or (i==n-1 and j==0) or (i==n//2 and j==n//2)):
-			tablero[i][j] = random.randint(1, 5) if obj == 3 else random.randint(6, 10)
-			cantidad -= 1
+    # Crear tablero con datos
+    board = Board()
+    board.matrix = matrix
+    board.size = size
+    board.dir = dir
+    board.difficulty = difficulty
+
+    # Enumerar indices de celdas
+    pos = initial_pos_oclock() if board.dir == BOARD_DIR_OCLOCK else initial_pos_counteroclock(board.size)
+    for i in range(board.size**2):
+        board.matrix[pos.row][pos.col][0] = i + 1
+        spiral_traversal(board, pos, 1)
+
+    return board
+
+def board_random_station():
+    return random.randint(CELL_STATION_TITAN, CELL_STATION_XANDAR)
+
+def board_random_obstacle():
+    return random.randint(CELL_OBSTACLE_DEBRIS, CELL_OBSTACLE_SOLAR_RAD)
+
+def board_place_object(tablero, n, cantidad, obj_generator):
+    while cantidad>0:
+        i = random.randint(0, n - 1)
+        j = random.randint(0, n - 1)
+        if tablero[i][j][1] == 0:
+            tablero[i][j][1] = obj_generator()
+            cantidad -= 1
 
 def print_board(board: Board):
-	print("-----"*board.size)
-	for i in range(board.size):
-		print("| ", end="")
-		for j in range(board.size):
-			print(f"{board.matrix[i][j]:02}", end=" | ")
-		print("\n" + "-----"*board.size)
-
-def test_spiral_traversal(board: Board, initial_pos = None, jumps = None, steps = 1):
-	pos = initial_pos_oclock() if not initial_pos else initial_pos
-	jumps = board.size**2 // steps if not jumps else jumps
-	for i in range(board.size**2):
-		board.matrix[pos.row][pos.col] = i + 1
-		spiral_traversal(board, pos, steps)
-
-if __name__ == "__main__":
-	n = 9 #int(input("n: "))
-	dificultad = 1 #int(input("dificultad: "))
-	direccion = 0 #int(input("direccion: "))
-	board = generate_random_board(n, dificultad, direccion)
-	print("Tablero generado:")
-	print_board(board)
-	print("Tablero recorrido:")
-	test_spiral_traversal(board, steps=3)
-	print_board(board)
-
-def dice():
-	return random.randint(1,5)
-
+    print("-----"*board.size)
+    for i in range(board.size):
+        print("| ", end="")
+        for j in range(board.size):
+            print(f"{board.matrix[i][j][0]:02}", end=" | ")
+        print("\n" + "-----"*board.size)

@@ -5,12 +5,13 @@ from ..inputs import PlayerInput
 from ..logic.board import Board, generate_random_board, spiral_traversal, initial_pos_oclock
 from ..menu.team import Team
 from ..constants import *
+from .. import globals
 from..logic.items import Item
 
 STATE_STRATEGY = 0
 STATE_THROW_DICE = 1
 STATE_USE_ITEM = 2
-STATE_SHOW_MAP = 3
+STATE_SHOW_BOARD = 3
 STATE_ACTION = 4
 STATE_STATION = 5
 STATE_OBSTACLE = 6
@@ -27,12 +28,16 @@ STRATEGY_OPTIONS = 3
 
 PLAYER_COUNT = 2
 
+TILE_SIZE = 128
+
 class Expedition(Scene):
     def load(self, context: GameContext):
         # get from context
         screen_rect = context.get_screen_rect()
 
-        self.spaceship_img = pygame.image.load(resources.images.SPACESHIP)
+        self.team_spaceship_img = [pygame.image.load(resources.images.SPACESHIP) for i in range(PLAYER_COUNT)]
+        self.team_spaceship_img[TURN_PLAYER_ONE].fill("red", special_flags=pygame.BLEND_ADD)
+        self.team_spaceship_img[TURN_PLAYER_TWO].fill("blue", special_flags=pygame.BLEND_ADD)
         self.blue_bg_img = pygame.image.load(resources.images.BLUE_BG)
         self.cell_dot_blue_img = pygame.image.load(resources.images.CELL_DOT_BLUE)
         self.dice = [
@@ -59,6 +64,32 @@ class Expedition(Scene):
         
         self.shield_icon_img = pygame.image.load(resources.images.ICON_SHIELD)
         self.shield_icon_img = pygame.transform.scale(self.shield_icon_img, (32, 32))
+        
+        self.disabled_icon_img = pygame.image.load(resources.images.ICON_DISABLED)
+        self.disabled_icon_img = pygame.transform.scale(self.disabled_icon_img, (32, 32))
+
+        self.home_img = pygame.image.load(resources.images.CELL_HOME)
+        self.home_img = pygame.transform.scale(self.home_img, (TILE_SIZE, TILE_SIZE))
+        self.end_img = pygame.image.load(resources.images.CELL_END)
+        self.end_img = pygame.transform.scale(self.end_img, (TILE_SIZE, TILE_SIZE))
+        self.station_imgs = [
+            pygame.image.load(resources.images.CELL_STATION_TITAN),
+            pygame.image.load(resources.images.CELL_STATION_SAKAAR),
+            pygame.image.load(resources.images.CELL_STATION_EGO),
+            pygame.image.load(resources.images.CELL_STATION_ASGARD),
+            pygame.image.load(resources.images.CELL_STATION_XANDAR),
+        ]
+        for i in range(0, len(self.station_imgs), +1):
+            self.station_imgs[i] = pygame.transform.scale(self.station_imgs[i], (TILE_SIZE, TILE_SIZE))
+        self.obstacle_imgs = [
+            pygame.image.load(resources.images.CELL_OBSTACLE_DEBRIS),
+            pygame.image.load(resources.images.CELL_OBSTACLE_METEORITE),
+            pygame.image.load(resources.images.CELL_OBSTACLE_ASTEROID),
+            pygame.image.load(resources.images.CELL_OBSTACLE_COSMIC_RAD),
+            pygame.image.load(resources.images.CELL_OBSTACLE_SOLAR_RAD),
+        ]
+        for i in range(0, len(self.obstacle_imgs), +1):
+            self.obstacle_imgs[i] = pygame.transform.scale(self.obstacle_imgs[i], (TILE_SIZE, TILE_SIZE))
 
         self.menu_font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
 
@@ -71,8 +102,11 @@ class Expedition(Scene):
         self.text_show_board = self.menu_font.render(resources.locale.SHOW_BOARD, True, "white")
         self.text_show_board_sel = self.menu_font.render(resources.locale.SHOW_BOARD, True, resources.colors.ui_text_primary)
 
+        self.text_skipped_turn = self.menu_font.render(resources.locale.SKIPPED_TURN, True, resources.colors.ui_text_primary)
+        self.text_not_enough_energy = self.menu_font.render(resources.locale.NOT_ENOUGH_ENERGY, True, resources.colors.ui_text_primary)
+
         self.text_player_turn = [
-            self.menu_font.render(resources.locale.PLAYER_TURN_FMT.format(i + 1), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
+            self.menu_font.render(resources.locale.PLAYER_TURN_FMT.format(self.teams[i].name), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
         ]
         self.text_state = [
             self.menu_font.render(resources.locale.STATE_STRATEGY_MSG, True, resources.colors.ui_text_primary),
@@ -84,6 +118,38 @@ class Expedition(Scene):
             self.menu_font.render(resources.locale.STATE_OBSTACLE_MSG, True, resources.colors.ui_text_primary),
             self.menu_font.render(resources.locale.STATE_END_OF_TURN_MSG, True, resources.colors.ui_text_primary),
             self.menu_font.render(resources.locale.STATE_MINIGAME_MSG, True, resources.colors.ui_text_primary),
+        ]
+
+        self.text_indices = [self.menu_font.render(str(i + 1), True, "white") for i in range(globals.board_size**2)]
+
+        self.text_station_name = [
+            self.menu_font.render(resources.locale.CELL_STATION_TITAN_NAME, True, "white"),
+            self.menu_font.render(resources.locale.CELL_STATION_SAKAAR_NAME, True, "white"),
+            self.menu_font.render(resources.locale.CELL_STATION_EGO_NAME, True, "white"),
+            self.menu_font.render(resources.locale.CELL_STATION_ASGARD_NAME, True, "white"),
+            self.menu_font.render(resources.locale.CELL_STATION_XANDAR_NAME, True, "white"),
+        ]
+        self.text_station_description = [
+            self.menu_font.render(resources.locale.CELL_STATION_TITAN_DESCRIPTION, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.CELL_STATION_SAKAAR_DESCRIPTION, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.CELL_STATION_EGO_DESCRIPTION, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.CELL_STATION_ASGARD_DESCRIPTION, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.CELL_STATION_XANDAR_DESCRIPTION, True, resources.colors.ui_text_primary),
+        ]
+
+        self.text_obstacle = [
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_DEBRIS_NAME, True, "white"),
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_METEORITE_NAME, True, "white"),
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_ASTEROID_NAME, True, "white"),
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_COSMIC_RAD_NAME, True, "white"),
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_SOLAR_RAD_NAME, True, "white"),
+        ]
+        self.text_obstacle_description = [
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_DEBRIS_DESCRIPTION, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_METEORITE_DESCRIPTION, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_ASTEROID_DESCRIPTION, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_COSMIC_RAD_DESCRIPTION, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.CELL_OBSTACLE_SOLAR_RAD_DESCRIPTION, True, resources.colors.ui_text_primary),
         ]
 
     def start(self, context: GameContext) -> None:
@@ -104,11 +170,13 @@ class Expedition(Scene):
         self.turn = TURN_PLAYER_ONE
         self.minigames = False
         self.insufficient = False
+        self.disabled_now = False
         self.dice_result = 0
         self.position = [initial_pos_oclock() for i in range(PLAYER_COUNT)]
         self.items = [[Item('More energy', 'fills up  yiur energy') for i in range(10)] for p in range(PLAYER_COUNT)]
         self.max_energy = 15
-        self.energy = [self.max_energy for i in range(PLAYER_COUNT)]
+        self.initial_energy = random.randint(5, 15)
+        self.energy = [self.initial_energy for i in range(PLAYER_COUNT)]
         self.immunity = [False for i in range(PLAYER_COUNT)]
         self.disabled = [False for i in range(PLAYER_COUNT)]
         self.board = generate_random_board(9, 1, 0) #TODO: usar valores del formulario
@@ -123,6 +191,11 @@ class Expedition(Scene):
         self.state.init_update()
 
         if self.state.is_current(STATE_STRATEGY):
+            if self.state.is_entering:
+                # Si está inhabilitado, finalizar turno prematuramente
+                if self.disabled[self.turn]:
+                    self.state.transition_to(STATE_END_OF_TURN)
+
             if self.input.is_up_button_down():
                 self.option_selected = (self.option_selected - 1) % STRATEGY_OPTIONS
             elif self.input.is_down_button_down():
@@ -134,7 +207,7 @@ class Expedition(Scene):
                 elif self.option_selected == STRATEGY_OPTION_USE_ITEM:
                     self.state.transition_to(STATE_USE_ITEM)
                 elif self.option_selected == STRATEGY_OPTION_SHOW_MAP:
-                    self.state.transition_to(STATE_SHOW_MAP)
+                    self.state.transition_to(STATE_SHOW_BOARD)
         
         elif self.state.is_current(STATE_THROW_DICE):
             if self.state.is_entering:
@@ -150,9 +223,26 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_STRATEGY)
                 elif self.input.is_confirm_button_down():
                     self.dice_thrown_timer.start(2000)
+                # Botones especiales para depuración del programa
+                elif context.get_keys_down()[pygame.K_1]:
+                    self.dice_result = 1
+                    self.dice_thrown_timer.start(2000)
+                elif context.get_keys_down()[pygame.K_2]:
+                    self.dice_result = 2
+                    self.dice_thrown_timer.start(2000)
+                elif context.get_keys_down()[pygame.K_3]:
+                    self.dice_result = 3
+                    self.dice_thrown_timer.start(2000)
+                elif context.get_keys_down()[pygame.K_4]:
+                    self.dice_result = 4
+                    self.dice_thrown_timer.start(2000)
+                elif context.get_keys_down()[pygame.K_5]:
+                    self.dice_result = 5
+                    self.dice_thrown_timer.start(2000)
+
             elif self.dice_thrown_timer.has_finished:
-                if self.energy[self.turn] - self.dice_result >= 0:
-                    self.energy[self.turn] -= self.dice_result
+                if self.energy[self.turn] > 0:
+                    self.energy[self.turn] -= 1
                     self.state.transition_to(STATE_ACTION)
                 else:
                     self.insufficient = True
@@ -176,7 +266,7 @@ class Expedition(Scene):
                 self.option_selected = 1
                 self.state.transition_to(STATE_STRATEGY)
         
-        elif self.state.is_current(STATE_SHOW_MAP):
+        elif self.state.is_current(STATE_SHOW_BOARD):
             if self.input.is_confirm_button_down() or self.input.is_cancel_button_down():
                 self.option_selected = 2
                 self.state.transition_to(STATE_STRATEGY)
@@ -204,7 +294,7 @@ class Expedition(Scene):
         
         elif self.state.is_current(STATE_STATION):
             if self.state.is_entering:
-                self.station_anim_timer.start(3000) #TODO: establecer duración real
+                self.station_anim_timer.start(3000)
             
             if self.station_anim_timer.has_finished:
                 if self.board.is_cell_at(self.position[self.turn], CELL_STATION_TITAN):
@@ -213,7 +303,7 @@ class Expedition(Scene):
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_SAKAAR):
                     while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
                         spiral_traversal(self.board, self.position[self.turn], 1)
-                    self.state.transition_to(STATE_END_OF_TURN) #TODO: calcular pasos para el siguiente sector desocupado
+                    self.state.transition_to(STATE_END_OF_TURN)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_EGO):
                     self.state.transition_to(STATE_THROW_DICE)
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_ASGARD):
@@ -229,23 +319,28 @@ class Expedition(Scene):
                     self.immunity[self.turn] = False
                     self.state.transition_to(STATE_END_OF_TURN)
                 else:
-                    self.obstacle_anim_timer.start(3000) #TODO: establecer duración real
+                    self.obstacle_anim_timer.start(3000)
             
             if self.obstacle_anim_timer.has_finished:
+                # Consecuencia para escombros espaciales
                 if self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_DEBRIS):
-                    print("debris")
                     while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
-                        spiral_traversal(self.board, self.position[self.turn], -1) #TODO: calcular pasos hacia atras para retroceder un sector
+                        spiral_traversal(self.board, self.position[self.turn], -1)
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Consecuencia para impacto de meteorito
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_METEORITE):
                     self.disabled[self.turn] = True
+                    self.disabled_now = True
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Consecuencia para asteroide
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_ASTEROID):
                     self.energy[self.turn] = max(self.energy[self.turn] - 3, 0)
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Consecuencia para radiación cósmica
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_COSMIC_RAD):
                     self.energy[self.turn] = max(self.energy[self.turn] - 2, 0)
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Consecuencia para radiación solar
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_SOLAR_RAD):
                     self.dice_result = -1 #TODO: calcular pasos hacia atras para retroceder al sector anterior en la diagonal secundaria
                     self.state.transition_to(STATE_ACTION)
@@ -255,8 +350,11 @@ class Expedition(Scene):
                 self.end_of_turn_timer.start(3000)
             
             if self.end_of_turn_timer.has_finished:
+                if not self.disabled_now:
+                    self.disabled[self.turn] = False
                 self.turn = (self.turn + 1) % PLAYER_COUNT
                 self.insufficient = False
+                self.disabled_now = False
                 self.option_selected = 0
                 if self.turn == TURN_PLAYER_ONE and self.minigames:
                     self.state.transition_to(STATE_MINIGAME)
@@ -268,55 +366,110 @@ class Expedition(Scene):
                 self.state.transition_to(STATE_STRATEGY)
 
         self.current_player_pos = self.position[self.turn]
-        self.camera_pos = (self.current_player_pos.col * 108 + 54, self.current_player_pos.row * 108 + 54)
+        self.camera_pos = (self.current_player_pos.col * TILE_SIZE + TILE_SIZE // 2, self.current_player_pos.row * TILE_SIZE + TILE_SIZE // 2)
 
         self.state.finish_update()
 
     def draw(self, context: GameContext) -> None:
         screen = context.get_screen()
 
-        # draw board
+        # Dibujar fondo espacial
         for i in range(0, 3, +1):
             for j in range(0, 3, +1):
                 screen.blit(self.blue_bg_img, (i * 512, j * 512))
+
+        # Dibujar tablero
         for i in range(0, self.board.size, +1):
             for j in range(0, self.board.size, +1):
-                cell = self.board.matrix[i][j]
-                if cell > 0:
-                    color = "red" if cell > 5 else "blue" if cell > 0 else "black"
-                    coords = self.coords_by_camera(screen, (j * 108, i * 108))
-                    pygame.draw.rect(screen, color, (coords[0], coords[1], 108, 108))
-                coords = self.coords_by_camera(screen, (j * 108 + 108 // 2 - 16, i * 108 + 108 // 2 - 16))
+                cell = self.board.cell_at((i, j))
+                coords = self.coords_by_camera(screen, (j * TILE_SIZE, i * TILE_SIZE))
+                # Dibujar inicio
+                if self.board.is_cell_at((i, j), CELL_HOME):
+                    screen.blit(self.home_img, coords)
+                # Dibujar destino
+                elif self.board.is_cell_at((i, j), CELL_END):
+                    screen.blit(self.end_img, coords)
+                # Dibujar estación
+                elif self.board.is_cell_station_at((i, j)):
+                    station_img = self.station_imgs[cell[1] - CELL_STATION_TITAN]
+                    screen.blit(station_img, coords)
+                    # Dibujar el nombre de la estación si el jugador del turno actual está encima:
+                    if cell[0] == self.board.cell_at(self.position[self.turn])[0]:
+                        station_text = self.text_station_name[cell[1] - CELL_STATION_TITAN]
+                        screen.blit(station_text, (coords[0] + TILE_SIZE // 2 - station_text.get_width() // 2, coords[1] - 40))
+                # Dibujar obstaculo
+                elif self.board.is_cell_obstacle_at((i, j)):
+                    obstacle_img = self.obstacle_imgs[cell[1] - CELL_OBSTACLE_DEBRIS]
+                    screen.blit(obstacle_img, coords)
+                    # Dibujar el nombre del obstáculo si el jugador del turno actual está encima:
+                    if cell[0] == self.board.cell_at(self.position[self.turn])[0]:
+                        obstacle_text = self.text_obstacle[cell[1] - CELL_OBSTACLE_DEBRIS]
+                        screen.blit(obstacle_text, (coords[0] + TILE_SIZE // 2 - obstacle_text.get_width() // 2, coords[1] - 40))
+                # Dibujar puntito
+                dot_size = self.cell_dot_blue_img.get_width()
+                coords = self.coords_by_camera(screen, (j * TILE_SIZE + TILE_SIZE // 2 - dot_size // 2, i * TILE_SIZE + TILE_SIZE // 2 - dot_size // 2))
                 screen.blit(self.cell_dot_blue_img, coords)
+                # Dibujar indice de secuencia
+                text = self.text_indices[cell[0] - 1]
+                coords = self.coords_by_camera(screen, (j * TILE_SIZE + TILE_SIZE // 2 - text.get_width() // 2, i * TILE_SIZE + TILE_SIZE // 2 - text.get_height() // 2))
+                screen.blit(text, coords)
 
-        # draw players
+        # Dibujar jugadores
         for i in range(0, PLAYER_COUNT, +1):
             pos = self.position[i]
-            offset_x = 27 if i == TURN_PLAYER_ONE else -27
-            offset_y = -27 if i == TURN_PLAYER_ONE else 27
-            coords = self.coords_by_camera(screen, (pos.col * 108 + offset_x, pos.row * 108 + offset_y))
-            screen.blit(self.spaceship_img, coords)
+            offset_abs = TILE_SIZE // 4
+            offset_x = offset_abs if i == TURN_PLAYER_ONE else -offset_abs
+            offset_y = -offset_abs if i == TURN_PLAYER_ONE else offset_abs
+            coords = self.coords_by_camera(screen, (pos.col * TILE_SIZE + offset_x, pos.row * TILE_SIZE + offset_y))
+            screen.blit(self.team_spaceship_img[i], coords)
         
-        # draw dice
+        # Dibujar dado
         if self.state.is_current(STATE_THROW_DICE):
             dice = self.dice[self.dice_result - 1]
-            dice_width = dice.get_width()
             if not self.dice_thrown_timer.has_started or self.dice_thrown_timer.ticks_elapsed // 250 % 2 == 0 and self.dice_thrown_timer.ticks_elapsed < 2000:
-                screen.blit(dice, (screen.get_width() // 2 - dice_width // 2, screen.get_height() * 3/4 - dice.get_height() // 2))
+                screen.blit(dice, (screen.get_width() // 2 - dice.get_width() // 2, screen.get_height() * 3/4 - dice.get_height() // 2))
 
-        # draw turn indicator
+        # Dibujar descripción de consecuencia
+        # Para obstáculos:
+        if self.state.is_current(STATE_OBSTACLE) and self.board.is_cell_obstacle_at(self.position[self.turn]):
+            cell = self.board.cell_at(self.position[self.turn])
+            description_text = self.text_obstacle_description[cell[1] - CELL_OBSTACLE_DEBRIS]
+            coords = (screen.get_width() // 2 - description_text.get_width() // 2, screen.get_height() * 3/4 - description_text.get_height() // 2)
+            pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, description_text.get_width() + 20, description_text.get_height() + 20), border_radius=10)
+            screen.blit(description_text, coords)
+        # Para estaciones:
+        if self.state.is_current(STATE_STATION) and self.board.is_cell_station_at(self.position[self.turn]):
+            cell = self.board.cell_at(self.position[self.turn])
+            description_text = self.text_station_description[cell[1] - CELL_STATION_TITAN]
+            coords = (screen.get_width() // 2 - description_text.get_width() // 2, screen.get_height() * 3/4 - description_text.get_height() // 2)
+            pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, description_text.get_width() + 20, description_text.get_height() + 20), border_radius=10)
+            screen.blit(description_text, coords)
+
+        # Dibujar mensaje de fin de turno
+        if self.state.is_current(STATE_END_OF_TURN):
+            text = None
+            if self.disabled[self.turn] and not self.disabled_now:
+                text = self.text_skipped_turn
+            elif self.insufficient:
+                text = self.text_not_enough_energy
+            if text:
+                coords = (screen.get_width() // 2 - text.get_width() // 2, screen.get_height() * 3/4 - text.get_height() // 2)
+                pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, text.get_width() + 20, text.get_height() + 20), border_radius=10)
+                screen.blit(text, coords)
+
+        # Dibujar indicador de turno
         turn_text = self.text_player_turn[self.turn]
         turn_text_box_width = turn_text.get_width() + 50 * 2
         pygame.draw.rect(screen, "white", (screen.get_width() // 2 - turn_text_box_width // 2, 0, turn_text_box_width, 32), border_bottom_left_radius=10, border_bottom_right_radius=10)
         screen.blit(turn_text, (screen.get_width() // 2 - turn_text.get_width() // 2, 4))
 
-        # draw state indicator
+        # Dibujar indicador de estado
         state_text = self.text_state[self.state.current_state]
         state_text_box_width = state_text.get_width() + 50 * 2
         pygame.draw.rect(screen, "white", (screen.get_width() // 2 - state_text_box_width // 2, screen.get_height() - 32, state_text_box_width, 32), border_top_left_radius=10, border_top_right_radius=10)
         screen.blit(state_text, (screen.get_width() // 2 - state_text.get_width() // 2, screen.get_height() - state_text.get_height()))
 
-        # draw players hud
+        # Dibujar detalles de equipos
         player_top_left = [
             (50, 50),  # top left corner
             (50, screen.get_width() - 300),  # top right corner
@@ -339,8 +492,10 @@ class Expedition(Scene):
             pygame.draw.rect(screen, "green", (left + 64 + 8 + 32 + 8, top + 56, energy_bar_width, 8))
             if player_immunity:
                 screen.blit(self.shield_icon_img, (left + 40, top + 40))
+            if player_disabled:
+                screen.blit(self.disabled_icon_img, (left + 56, top + 40))
 
-        # draw menu
+        # Dibujar menú de estrategia
         if self.state.is_current(STATE_STRATEGY):
             left = 300
             top = 400
@@ -353,9 +508,7 @@ class Expedition(Scene):
             screen.blit(self.text_use_item_sel if self.option_selected == 1 else self.text_use_item, (left + row_margin_left, top + row + row_margin_top))
             screen.blit(self.text_show_board_sel if self.option_selected == 2 else self.text_show_board, (left + row_margin_left, top + row * 2 + row_margin_top))
 
-        if self.state.is_current(STATE_THROW_DICE):
-            pass
-
+        # Dibujar menú de items
         if self.state.is_current(STATE_USE_ITEM):
             item_cols = self.option_selected % 5
             item_rows = self.option_selected // 5
@@ -365,7 +518,8 @@ class Expedition(Scene):
                 item_rows = i // 5
                 pygame.draw.circle(screen, '#ffffff', (200 + 30 * item_cols, 400 + 30 * item_rows), 10)
 
-        if self.state.is_current(STATE_SHOW_MAP):
+        # Dibujar mapa de tablero
+        if self.state.is_current(STATE_SHOW_BOARD):
             for i in range(0, self.board.size, +1):
                 for j in range(0, self.board.size, +1):
                     cell = self.board.matrix[i][j]
