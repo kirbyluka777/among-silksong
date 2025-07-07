@@ -62,28 +62,28 @@ def spiral_traversal(board: Board, pos: Positioning, steps: int):
             elif pos.dir == MOVE_DIR_UP:
                 pos.row -= 1
     elif steps < 0:
-        for i in range(steps):
-            if pos.dir == MOVE_DIR_RIGHT and pos.col >= board.size - pos.hturns // 2:
-                pos.vturns -= 1
-                pos.dir = MOVE_DIR_DOWN if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_UP
-            elif pos.dir == MOVE_DIR_LEFT and pos.col <= pos.hturns // 2 - 1:
-                pos.vturns -= 1
+        for i in range(abs(steps)):
+            if pos.dir == MOVE_DIR_RIGHT and pos.col <= pos.hturns // 2 - 1:
+                pos.hturns -= 1
                 pos.dir = MOVE_DIR_UP if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_DOWN
-            elif pos.dir == MOVE_DIR_DOWN and pos.row >= board.size - pos.vturns // 2:
+            elif pos.dir == MOVE_DIR_LEFT and pos.col >= board.size - pos.hturns // 2 - 1:
                 pos.hturns -= 1
-                pos.dir = MOVE_DIR_LEFT if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_RIGHT
-            elif pos.dir == MOVE_DIR_UP and pos.row <= pos.vturns // 2 - 1:
-                pos.hturns -= 1
+                pos.dir = MOVE_DIR_DOWN if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_UP
+            elif pos.dir == MOVE_DIR_DOWN and pos.row <= pos.vturns // 2:
+                pos.vturns -= 1
                 pos.dir = MOVE_DIR_RIGHT if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_LEFT
+            elif pos.dir == MOVE_DIR_UP and pos.row >= board.size - pos.vturns // 2:
+                pos.vturns -= 1
+                pos.dir = MOVE_DIR_LEFT if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_RIGHT
             
-        if pos.dir == MOVE_DIR_RIGHT:
-            pos.col += (1 if steps > 0 else -1)
-        elif pos.dir == MOVE_DIR_LEFT:
-            pos.col -= (1 if steps > 0 else -1)
-        elif pos.dir == MOVE_DIR_DOWN:
-            pos.row += (1 if steps > 0 else -1)
-        elif pos.dir == MOVE_DIR_UP:
-            pos.row -= (1 if steps > 0 else -1)
+            if pos.dir == MOVE_DIR_RIGHT:
+                pos.col -= 1
+            elif pos.dir == MOVE_DIR_LEFT:
+                pos.col += 1
+            elif pos.dir == MOVE_DIR_DOWN:
+                pos.row -= 1
+            elif pos.dir == MOVE_DIR_UP:
+                pos.row += 1
 
 def generate_random_board(size: int, difficulty: int, dir: int):
     # Inicializar matriz de tablero
