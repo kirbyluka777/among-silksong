@@ -193,11 +193,12 @@ class Expedition(Scene):
         self.minigames = False
         self.insufficient = False
         self.disabled_now = False
+        self.free_dice = False
         self.dice_result = [0 for _ in range(PLAYER_COUNT)]
         self.position = [board.initial_pos(self.board) for _ in range(PLAYER_COUNT)]
         self.items = [[Item('More energy', 'Fills up  your energy') for _ in range(10)] for _ in range(PLAYER_COUNT)]
         self.max_energy = 15
-        self.initial_energy = random.randint(5, 15)
+        self.initial_energy = random.randint(5, self.max_energy)
         self.energy = [self.initial_energy for i in range(PLAYER_COUNT)]
         self.immunity = [False for _ in range(PLAYER_COUNT)]
         self.disabled = [False for _ in range(PLAYER_COUNT)]
@@ -255,26 +256,32 @@ class Expedition(Scene):
                 # Si está inhabilitado, finalizar turno prematuramente
                 if self.disabled[self.turn]:
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Si no tiene suficiente energia, finalizar turno prematuramente
+                elif self.energy[self.turn] <= 0:
+                    self.insufficient = True
+                    self.state.transition_to(STATE_END_OF_TURN)
 
-            # Cambiar entre las opciones disponibles en el menú
-            if self.input.is_up_button_down():
-                self.option_selected = (self.option_selected - 1) % STRATEGY_OPTIONS
-            elif self.input.is_down_button_down():
-                self.option_selected = (self.option_selected + 1) % STRATEGY_OPTIONS
+            # Si puede realizar una acción
+            if not self.disabled[self.turn] or self.energy[self.turn] > 0:
+                # Cambiar entre las opciones disponibles en el menú
+                if self.input.is_up_button_down():
+                    self.option_selected = (self.option_selected - 1) % STRATEGY_OPTIONS
+                elif self.input.is_down_button_down():
+                    self.option_selected = (self.option_selected + 1) % STRATEGY_OPTIONS
 
-            # Pasar al siguiente estado según la opción escogida
-            if self.input.is_confirm_button_down():
-                if self.option_selected == STRATEGY_OPTION_THROW_DICE:
-                    self.state.transition_to(STATE_THROW_DICE)
-                elif self.option_selected == STRATEGY_OPTION_USE_ITEM:
-                    self.state.transition_to(STATE_USE_ITEM)
-                elif self.option_selected == STRATEGY_OPTION_SHOW_MAP:
-                    self.state.transition_to(STATE_SHOW_BOARD)
+                # Pasar al siguiente estado según la opción escogida
+                if self.input.is_confirm_button_down():
+                    if self.option_selected == STRATEGY_OPTION_THROW_DICE:
+                        self.state.transition_to(STATE_THROW_DICE)
+                    elif self.option_selected == STRATEGY_OPTION_USE_ITEM:
+                        self.state.transition_to(STATE_USE_ITEM)
+                    elif self.option_selected == STRATEGY_OPTION_SHOW_MAP:
+                        self.state.transition_to(STATE_SHOW_BOARD)
 
-            # Aciones especiales de depurraión
-            if keys_down[pygame.K_x]:
-                self.dice_result[self.turn] = self.board.size**2 - 2
-                self.state.transition_to(STATE_ACTION)
+                # Aciones especiales de depurraión
+                if keys_down[pygame.K_x]:
+                    self.dice_result[self.turn] = self.board.size**2 - 2
+                    self.state.transition_to(STATE_ACTION)
         
         # Estado de lanzar dado
         elif self.state.is_current(STATE_THROW_DICE):
@@ -290,8 +297,8 @@ class Expedition(Scene):
                 if self.dice_rolling_timer.has_finished:
                     self.dice_result[self.turn] = random.randint(1, 5)
                     self.dice_rolling_timer.start(50)
-                # Si cancela, regresar al menú de estrategia
-                if self.input.is_cancel_button_down():
+                # Si cancela, regresar al menú de estrategia (no permitido para dado gratis)
+                if self.input.is_cancel_button_down() and not self.free_dice:
                     self.state.transition_to(STATE_STRATEGY)
                 # Si confirma, lanzar dado
                 elif self.input.is_confirm_button_down():
@@ -315,10 +322,13 @@ class Expedition(Scene):
 
             # Después del tiempo a esperar al lanzar el dado
             elif self.dice_thrown_timer.has_finished:
-                # Si hay suficiente energia
-                if self.energy[self.turn] > 0:
-                    # Realizar la acción de moverse y gastar un punto de nergia
-                    self.energy[self.turn] -= 1
+                # Si hay suficiente energia o es dado gratutio
+                if self.energy[self.turn] > 0 or self.free_dice:
+                    # Realizar la acción de moverse
+                    # Gastar un punto de nergia si no es dado gratutio
+                    if not self.free_dice:
+                        self.energy[self.turn] -= 1
+                    self.free_dice = False
                     self.state.transition_to(STATE_ACTION)
                 else:
                     # De otra forma, terminar turno avisando que no tiene energía
@@ -404,6 +414,7 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para Ego
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_EGO):
+                    self.free_dice = True
                     self.state.transition_to(STATE_THROW_DICE)
                 # Consecuencia para Asgard
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_ASGARD):
