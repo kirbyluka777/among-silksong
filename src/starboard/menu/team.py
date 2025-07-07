@@ -13,13 +13,58 @@ class Country:
         self.code = code
         self.name = name
 
-def allowed_chars(password, allow_chars):   # Verificar caracteres invalidos en la contrasena
+def XOR_Encrypt(text, key):
+    return ' '.join(str(ord(c) ^ int(key)) for c in text)
+
+def XOR_Decrypt(encrypted_text, key):
+    return ''.join(chr(int(num) ^ int(key)) for num in encrypted_text.split())
+
+#por cada caracter lo convierte a su codigo ascii, aplica la operacion XoR (comparar sus binarios para generar otro numero en binario) con el "^" con la clave,convierte ese numero en un caracter y lo va pegando
+# ord conviente un caracter a su codigo ascii y chr convierte un numero ascii a caracter, son opuestos
+
+def is_lowercase_letter(c):
+    return 'a' <= c <= 'z'
+
+def is_uppercase_case_letter(c):
+    return 'A' <= c <= 'Z'
+
+def is_number(c):
+    return '0' <= c <= '9'
+
+def is_valid_char(c, allow_chars):
+    return is_lowercase_letter(c) or is_uppercase_case_letter(c) or is_number(c) or c in allow_chars
+
+def allowed_chars(password, allow_chars):
     for caracter in password:
-        if not (caracter.isalnum() or caracter in allow_chars): #esto tambien
+        if not is_valid_char(caracter, allow_chars):
             return False
     return True
 
-def verification(password):     #Verificar la contrasena
+def contain_number(password):
+    for c in password:
+        if is_number(c):
+            return True
+    return False
+
+def contain_lowercase(password):
+    for c in password:
+        if is_lowercase_letter(c):
+            return True
+    return False
+
+def contain_uppercase(password):
+    for c in password:
+        if is_uppercase_case_letter(c):
+            return True
+    return False
+
+def repeat_3(password):
+    for i in range(len(password) - 2):
+        if password[i] == password[i+1] == password[i+2]:
+            return True
+    return False
+
+def verification(password):
     error = True
     while error:
         error = False
@@ -30,48 +75,35 @@ def verification(password):     #Verificar la contrasena
             password = input("Ingrese una nueva contraseña: ")
             error = True
 
-        # Caracteres vqlidos
+        # Caracteres válidos
         while not allowed_chars(password, "*=_#"):
-            print("Su contraseña posee caracteres invalidos.")
+            print("Su contraseña posee caracteres inválidos.")
             password = input("Ingrese una nueva contraseña: ")
             error = True
 
-        # Numeros
-        if not re.search(r"\d", password):
-            print("A su contraseña le faltan numeros")
+        # Números
+        if not contain_number(password):
+            print("A su contraseña le faltan números")
             password = input("Ingrese una nueva contraseña: ")
             error = True
 
-        # Letras minusculas
-        if not re.search(r"[a-z]", password):
-            print("A su contraseña le faltan letras minusculas")
+        # Letras minúsculas
+        if not contain_lowercase(password):
+            print("A su contraseña le faltan letras minúsculas")
             password = input("Ingrese una nueva contraseña: ")
             error = True
-        
-        # Letras mayusculas
-        if not re.search(r"[A-Z]", password):
-            print("A su contraseña le faltan letras mayusculas")
-            password = input("Ingrese una nueva contraseña: ")
-            error = True
-#paulo, no seas imbecil, arregla lo del re no puedes usarlo
-        # Repeticion de 3 caracteres
-        i = 0
-        while i <= len(password) - 3:
-            if password[i] == password[i+1] == password[i+2]:
-                print("La contraseña posee 3 caracteres repetidos de manera secuencial")
-                password = input("Ingrese una nueva contraseña: ")
-                error = True
-                i=len(password)
-            i += 1
 
-    print("Contrasena valida")
+        # Letras mayúsculas
+        if not contain_uppercase(password):
+            print("A su contraseña le faltan letras mayúsculas")
+            password = input("Ingrese una nueva contraseña: ")
+            error = True
+
+        # Repetición de 3 caracteres
+        if repeat_3(password):
+            print("La contraseña posee 3 caracteres repetidos de manera secuencial")
+            password = input("Ingrese una nueva contraseña: ")
+            error = True
+
+    print("Contraseña válida")
     return password
-
-def XOR_Encrypt(text, key):
-    return ' '.join(str(ord(c) ^ int(key)) for c in text)
-
-def XOR_Decrypt(encrypted_text, key):
-    return ''.join(chr(int(num) ^ int(key)) for num in encrypted_text.split())
-
-#por cada caracter lo convierte a su codigo ascii, aplica la operacion XoR (comparar sus binarios para generar otro numero en binario) con el "^" con la clave,convierte ese numero en un caracter y lo va pegando
-# ord conviente un caracter a su codigo ascii y chr convierte un numero ascii a caracter, son opuestos
