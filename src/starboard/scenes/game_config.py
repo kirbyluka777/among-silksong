@@ -43,7 +43,7 @@ class GameConfig(Scene):
             globals.board_size = 5 + self.board_size * 2
             globals.board_difficulty = self.difficulty
             globals.board_dir = self.board_dir
-            context.scene.change(1)
+            context.scene.change(SCENE_EXPEDITION)
 
     def draw(self, context):
         screen = context.get_screen()

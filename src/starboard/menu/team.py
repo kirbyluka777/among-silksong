@@ -8,10 +8,6 @@ class Team:
         self.name = name # 20 caracteres
         self.email = email # 
         self.password = password
-class Country:
-    def __init__(self, code, name):
-        self.code = code
-        self.name = name
 
 def XOR_Encrypt(text, key):
     return ' '.join(str(ord(c) ^ int(key)) for c in text)

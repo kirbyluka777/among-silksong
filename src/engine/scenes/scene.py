@@ -4,21 +4,21 @@ from ..game.context.game import GameContext
 
 class Scene(ABC):
     @abstractmethod
-    def load(self, context: GameContext) -> None:
+    def load(self, context: GameContext):
         pass
 
     @abstractmethod
-    def start(self, context: GameContext) -> None:
+    def start(self, context: GameContext):
         pass
 
     @abstractmethod
-    def update(self, context: GameContext) -> None:
+    def update(self, context: GameContext):
         pass
 
     @abstractmethod
-    def draw(self, context: GameContext) -> None:
+    def draw(self, context: GameContext):
         pass
 
     @abstractmethod
-    def exit(self, context: GameContext) -> None:
+    def exit(self, context: GameContext):
         pass

@@ -1,6 +1,6 @@
 from engine import *
-from starboard.scenes import Coconut, Wip, Expedition, GameConfig
+from starboard.scenes import *
 
-setup = GameSetup("Coconut", [GameConfig(), Expedition(), Wip(), Coconut()])
+setup = GameSetup("Coconut", [MainMenu(), GameConfig(), Expedition(), Options(), Wip(), Coconut()])
 
 Game(setup).run()

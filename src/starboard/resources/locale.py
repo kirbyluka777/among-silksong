@@ -1,3 +1,5 @@
+GAME_TITLE = "Among Silksong"
+
 PRESS = "Presionar"
 ROUND = "Ronda"
 TURN = "Turno"

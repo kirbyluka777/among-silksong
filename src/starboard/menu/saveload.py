@@ -24,15 +24,6 @@ def save_team(data:Team):
 
         file.write(packed_data)
 
-def save_country(data:Country):
-    with open(FILE_COUNTRY, 'ab') as file:
-        code = data.code.encode('utf-8')
-        name = data.name.encode('utf-8')
-
-        packed_data = struct.pack(FORMAT_COUNTRY, code, name)
-
-        file.write(packed_data)
-
 def load_team(game):
     if not os.path.isfile(FILE_TEAM):
         return
@@ -47,17 +38,3 @@ def load_team(game):
             password = password.decode('utf-8').strip(NULL)
 
             game.teams.append(Team(name, email, password))
-
-def load_country(game):
-    if not os.path.isfile(FILE_COUNTRY):
-        return
-    with open(FILE_COUNTRY, 'rb') as file:
-        while True:
-            bytes = file.read(SIZE_COUNTRY)
-            if not bytes:
-                return
-            code, name = struct.unpack(FORMAT_COUNTRY, bytes)
-            code = code.decode('utf-8').strip(NULL)
-            name = name.decode('utf-8').strip(NULL)
-
-            game.countries.append(Country(code, name))

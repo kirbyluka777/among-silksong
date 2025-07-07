@@ -172,7 +172,7 @@ class Expedition(Scene):
             self.menu_font.render(resources.locale.CELL_OBSTACLE_SOLAR_RAD_DESCRIPTION, True, resources.colors.ui_text_primary),
         ]
 
-    def start(self, context: GameContext) -> None:
+    def start(self, context: GameContext):
         # Crear controladores de lógica
         self.input = PlayerInput(context)
 
@@ -210,7 +210,7 @@ class Expedition(Scene):
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(0.5)
 
-    def update(self, context: GameContext) -> None:
+    def update(self, context: GameContext):
         keys_down = context.get_keys_down()
         self.state.init_update()
 
@@ -488,7 +488,7 @@ class Expedition(Scene):
 
         self.state.finish_update()
 
-    def draw(self, context: GameContext) -> None:
+    def draw(self, context: GameContext):
         screen = context.get_screen()
 
         # Dibujar fondo espacial

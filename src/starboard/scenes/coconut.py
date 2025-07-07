@@ -8,7 +8,7 @@ class Coconut(Scene):
         # load image used for the coconut
         self.coconut_image = pygame.image.load(resources.images.COCONUT).convert()
 
-    def start(self, context: GameContext) -> None:
+    def start(self, context: GameContext):
         # get from context
         screen = context.get_screen()
 
@@ -22,7 +22,7 @@ class Coconut(Scene):
         self.limits = Vector2(screen.get_width() - self.coconut_image.get_width(), screen.get_height() - self.coconut_image.get_height())
         self.coconut_pos = Vector2(random.randint(0, int(self.limits.x)), random.randint(0, int(self.limits.y)))
 
-    def update(self, context: GameContext) -> None:
+    def update(self, context: GameContext):
         # get grom context
         dt = context.get_delta_time()
 
@@ -35,7 +35,7 @@ class Coconut(Scene):
         # update coconut position
         self.coconut_pos = self.coconut_pos + self.coconut_dir * dt * self.coconut_speed
 
-    def draw(self, context: GameContext) -> None:
+    def draw(self, context: GameContext):
         # get grom context
         screen = context.get_screen()
 
