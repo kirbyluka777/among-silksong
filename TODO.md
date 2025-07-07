@@ -19,24 +19,24 @@
   - [x] Podrán participar 2 equipos (cada uno controlando a un astronauta).
   - [-] Cada juego que se inicie, representará una expedición o viaje estelar, el cual debe quedar identificado con un código único.
   - [x] El juego se desarrollará en un mapa estelar de N x N sectores, donde N es un número impar entre 5 y 19 inclusive.
-  - [-] La dimensión del mapa, será acordado entre los dos participantes.
+  - [x] La dimensión del mapa, será acordado entre los dos participantes.
   - [x] El punto de partida será la Tierra (sector 1,1) y el objetivo final será un planeta habitable ubicado en el punto central del mapa, al cual se llegará en un recorrido en espiral.
   - [x] Al inicio del juego, a cada equipo, se le asignará aleatoriamente (en un rango de 5 a 15) una cantidad de "unidades de energía".
   - [x] Para el desplazamiento, los jugadores activarán alternadamente los propulsores de sus naves que les permitirá avanzar un número k de sectores en un recorrido en espiral sobre el mapa estelar. Donde k es un número aleatorio entre 1 y 5 inclusive y cada activación de propulsores consume una unidad de energía.
-  - [-] El recorrido del mapa, se podrá hacer en sentido horario o antihorario, elegido por los jugadores.
-  - [-] Existirán tres niveles de dificultad, lo que determinará la cantidad de obstáculos espaciales y estaciones de apoyo que se conseguirán distribuidas en el mapa estelar. El porcentaje se calculará sobre la cantidad de sectores del mapa.
+  - [x] El recorrido del mapa, se podrá hacer en sentido horario o antihorario, elegido por los jugadores.
+  - [x] Existirán tres niveles de dificultad, lo que determinará la cantidad de obstáculos espaciales y estaciones de apoyo que se conseguirán distribuidas en el mapa estelar. El porcentaje se calculará sobre la cantidad de sectores del mapa.
       Nivel de dificultad  Porcentaje de obtáculos espaciales (%)   Porcentaje de estaciones de apoyo (%)
-    - [-] Básico           10                                       20
-    - [-] Medio            15                                       15
-    - [-] Avanzado         20                                       10
+    - [x] Básico           10                                       20
+    - [x] Medio            15                                       15
+    - [x] Avanzado         20                                       10
   - [ ] Cada jugador seleccionará a un equipo con el que hará la expedición (para ello debe estar registrados). Cada equipo tendrá asociado un ODS desde su inicio (ejemplo: Orión - Energía Asequible y Limpia). La aplicación, debe permitir la incorporación de nuevos equipos y asociales su ODS.
   - [x] Cada sector del mapa se debe identificar con un número consecutivo (1,2, …) en el mapa, que indicará el recorrido en espiral.
   - [x] El recorrido lo iniciará el equipo que obtenga el mayor número, entre un par de números aleatorios generados uno por cada equipo, al comienzo del juego.
-  - [-] El mapa se recorrerá en forma de espiral, en sentido horario o sentido antihorario, opción que debe escogerse antes de iniciar el juego.
+  - [x] El mapa se recorrerá en forma de espiral, en sentido horario o sentido antihorario, opción que debe escogerse antes de iniciar el juego.
   - [x] Cada jugador activará sus propulsores de forma alterna y avanzará tantos sectores en el mapa como lo permitan los propulsores.
   - [x] Durante el recorrido se presentarán obstáculos que tendrán consecuencias no favorables para el viaje, estos obstáculos o anomalías espaciales pueden presentarse o encontrarse en un determinado sector, así mismo habrá estaciones espaciales que apoyarán a las naves a completar su recorrido. No todos los sectores tendrán anomalías espaciales ni estaciones espaciales.
   - [x] Por acuerdos internacionales, dos naves pueden llegar a un mismo sector, sin que una afecte el recorrido de la otra.
-  - [ ] Para llegar hasta el Planeta destino se debe llegar con la energía de propulsión exacta, de no ser así se producirá un efecto rebote, que lo hará retroceder tantos sectores como energía excedente a la requerida para llegar al planeta objetivo, sin desperdicio, luego se debe intentar avanzar nuevamente para llegar al sector donde se encuentra la Planeta objetivo.
+  - [x] Para llegar hasta el Planeta destino se debe llegar con la energía de propulsión exacta, de no ser así se producirá un efecto rebote, que lo hará retroceder tantos sectores como energía excedente a la requerida para llegar al planeta objetivo, sin desperdicio, luego se debe intentar avanzar nuevamente para llegar al sector donde se encuentra la Planeta objetivo.
   - [-] En algunas de los sectores existirán, de forma aleatoria, ayudas u obstáculos espaciales, que facilitarán o dificultarán el avance de las expediciones, estas se detallan a continuación:
     - [-] Ayudas:
         Estación espacial          Consecuencia
@@ -65,7 +65,7 @@
 
 - [ ] Reportes:
   - [ ] A partir de los datos almacenados en los archivos EQUIPOS, EXPEDICIONES ESPACIALES y DETALLE DE VIAJES , se pide :
-  - [ ] a) Dado el identificador de un país en particular, presentar por pantalla el mayor recorrido alcanzado por alguna de sus naves, así mismo mostrar el detalle de las expediciones donde se lograron estos recorridos. Para ello utilizar un método de búsqueda binario.
+  - [-] a) Dado el identificador de un país en particular, presentar por pantalla el mayor recorrido alcanzado por alguna de sus naves, así mismo mostrar el detalle de las expediciones donde se lograron estos recorridos. Para ello utilizar un método de búsqueda binario.
   - [ ] b) Elaborar un reporte, que muestre los datos básicos de un equipo en particular, dado su identificador y que muestre las expediciones en los que ha participado y la cantidad de kilometrajes obtenidos. Utilice alguno de los métodos de búsqueda.
   - [ ] c) Hacer un reporte que muestre el TOP 10, de las expediciones con mayor kilometraje recorrido, presentando el identificador del viaje, el nombre del equipo que lo hizo, el pais de procedencia y total de kilómetros recorrido, para ello utilizar el método de ordenamiento Quicksort
 
@@ -80,4 +80,5 @@
   - [x] Renderizar nombre de obstaculo/estación
   - [x] Poner de color las naves de cada equipo
   - [ ] Hacer clickable los botones del menú de juego
+  - [ ] Programar Endgame
   - [ ] ...

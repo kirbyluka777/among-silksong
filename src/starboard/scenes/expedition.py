@@ -1,10 +1,10 @@
 import random
 from engine import *
+from ..constants import *
 from .. import resources
 from ..inputs import PlayerInput
-from ..logic.board import Board, generate_random_board, spiral_traversal, initial_pos_oclock
+from ..logic import board
 from ..menu.team import Team
-from ..constants import *
 from .. import globals
 from..logic.items import Item
 
@@ -120,6 +120,9 @@ class Expedition(Scene):
         self.text_team_name = [
             self.menu_font.render(self.teams[i].name, True, "white") for i in range(0, PLAYER_COUNT)
         ]
+        self.text_team_name_primary = [
+            self.menu_font.render(self.teams[i].name, True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
+        ]
         self.text_draft_to_team = [
             self.menu_font.render(resources.locale.DRAFT_TO_PLAYER_FMT.format(self.teams[i].name), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
         ]
@@ -170,11 +173,11 @@ class Expedition(Scene):
         ]
 
     def start(self, context: GameContext) -> None:
-        # create controllers
+        # Crear controladores de lógica
         self.input = PlayerInput(context)
 
         self.state = StateMachineController(context, STATE_DRAFT)
-        
+
         self.dice_rolling_timer = TimerController(context)
         self.draft_completed_timer = TimerController(context)
         self.dice_thrown_timer = TimerController(context)
@@ -183,25 +186,26 @@ class Expedition(Scene):
         self.obstacle_anim_timer = TimerController(context)
         self.end_of_turn_timer = TimerController(context)
 
-        # init state
+        # Inicializar estado
+        self.board = board.generate_random_board(globals.board_size, globals.board_difficulty, globals.board_dir)
         self.option_selected = 0
         self.turn = None
         self.minigames = False
         self.insufficient = False
         self.disabled_now = False
+        self.free_dice = False
         self.dice_result = [0 for _ in range(PLAYER_COUNT)]
-        self.position = [initial_pos_oclock() for _ in range(PLAYER_COUNT)]
+        self.position = [board.initial_pos(self.board) for _ in range(PLAYER_COUNT)]
         self.items = [[Item('More energy', 'Fills up  your energy') for _ in range(10)] for _ in range(PLAYER_COUNT)]
         self.max_energy = 15
-        self.initial_energy = random.randint(5, 15)
+        self.initial_energy = random.randint(5, self.max_energy)
         self.energy = [self.initial_energy for i in range(PLAYER_COUNT)]
         self.immunity = [False for _ in range(PLAYER_COUNT)]
         self.disabled = [False for _ in range(PLAYER_COUNT)]
         self.draft_ready = [False for _ in range(PLAYER_COUNT)]
-        self.board = generate_random_board(globals.board_size, globals.board_difficulty, globals.board_dir)
         self.camera_pos = (0, 0)
 
-        # play music
+        # Reproducir música
         pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
         pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(0.5)
@@ -210,7 +214,7 @@ class Expedition(Scene):
         keys_down = context.get_keys_down()
         self.state.init_update()
 
-        # Estado de Draft (selección de primer turno)
+        # Estado de selección de primer turno
         if self.state.is_current(STATE_DRAFT):
             # Inicializar estado
             if self.state.is_entering:
@@ -229,7 +233,7 @@ class Expedition(Scene):
                 # Si ya todos presionaron completar el draft
                 if self.draft_ready[TURN_PLAYER_ONE] and self.draft_ready[TURN_PLAYER_TWO]:
                     self.draft_completed_timer.start(2000)
-            
+
             # Después de un tiempo de completar el draft
             elif self.draft_completed_timer.has_finished:
                 # En caso que ambos tenga el mismo dado, se repite el draft
@@ -245,40 +249,61 @@ class Expedition(Scene):
                     # Comenzar con el flujo del juego
                     self.state.transition_to(STATE_STRATEGY)
 
+        # Estado de menú de estrategia
         if self.state.is_current(STATE_STRATEGY):
+            # Inicializar estado
             if self.state.is_entering:
                 # Si está inhabilitado, finalizar turno prematuramente
                 if self.disabled[self.turn]:
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Si no tiene suficiente energia, finalizar turno prematuramente
+                elif self.energy[self.turn] <= 0:
+                    self.insufficient = True
+                    self.state.transition_to(STATE_END_OF_TURN)
 
-            if self.input.is_up_button_down():
-                self.option_selected = (self.option_selected - 1) % STRATEGY_OPTIONS
-            elif self.input.is_down_button_down():
-                self.option_selected = (self.option_selected + 1) % STRATEGY_OPTIONS
+            # Si puede realizar una acción
+            if not self.disabled[self.turn] or self.energy[self.turn] > 0:
+                # Cambiar entre las opciones disponibles en el menú
+                if self.input.is_up_button_down():
+                    self.option_selected = (self.option_selected - 1) % STRATEGY_OPTIONS
+                elif self.input.is_down_button_down():
+                    self.option_selected = (self.option_selected + 1) % STRATEGY_OPTIONS
 
-            if self.input.is_confirm_button_down():
-                if self.option_selected == STRATEGY_OPTION_THROW_DICE:
-                    self.state.transition_to(STATE_THROW_DICE)
-                elif self.option_selected == STRATEGY_OPTION_USE_ITEM:
-                    self.state.transition_to(STATE_USE_ITEM)
-                elif self.option_selected == STRATEGY_OPTION_SHOW_MAP:
-                    self.state.transition_to(STATE_SHOW_BOARD)
+                # Pasar al siguiente estado según la opción escogida
+                if self.input.is_confirm_button_down():
+                    if self.option_selected == STRATEGY_OPTION_THROW_DICE:
+                        self.state.transition_to(STATE_THROW_DICE)
+                    elif self.option_selected == STRATEGY_OPTION_USE_ITEM:
+                        self.state.transition_to(STATE_USE_ITEM)
+                    elif self.option_selected == STRATEGY_OPTION_SHOW_MAP:
+                        self.state.transition_to(STATE_SHOW_BOARD)
+
+                # Aciones especiales de depurraión
+                if keys_down[pygame.K_x]:
+                    self.dice_result[self.turn] = self.board.size**2 - 2
+                    self.state.transition_to(STATE_ACTION)
         
+        # Estado de lanzar dado
         elif self.state.is_current(STATE_THROW_DICE):
+            # Inicializar estado
             if self.state.is_entering:
                 self.dice_result[self.turn] = 0
                 self.dice_thrown_timer.reset()
                 self.dice_rolling_timer.start(50)
 
+            # Si el dado aún no ha sido lanzado
             if not self.dice_thrown_timer.has_started:
+                # Remover aleatoriamente el dado
                 if self.dice_rolling_timer.has_finished:
                     self.dice_result[self.turn] = random.randint(1, 5)
                     self.dice_rolling_timer.start(50)
-                if self.input.is_cancel_button_down():
+                # Si cancela, regresar al menú de estrategia (no permitido para dado gratis)
+                if self.input.is_cancel_button_down() and not self.free_dice:
                     self.state.transition_to(STATE_STRATEGY)
+                # Si confirma, lanzar dado
                 elif self.input.is_confirm_button_down():
                     self.dice_thrown_timer.start(2000)
-                # Botones especiales para depuración del programa
+                # Acciones especiales para depuración del programa (seleccionar valor de dado)
                 elif context.get_keys_down()[pygame.K_1]:
                     self.dice_result[self.turn] = 1
                     self.dice_thrown_timer.start(2000)
@@ -295,14 +320,22 @@ class Expedition(Scene):
                     self.dice_result[self.turn] = 5
                     self.dice_thrown_timer.start(2000)
 
+            # Después del tiempo a esperar al lanzar el dado
             elif self.dice_thrown_timer.has_finished:
-                if self.energy[self.turn] > 0:
-                    self.energy[self.turn] -= 1
+                # Si hay suficiente energia o es dado gratutio
+                if self.energy[self.turn] > 0 or self.free_dice:
+                    # Realizar la acción de moverse
+                    # Gastar un punto de nergia si no es dado gratutio
+                    if not self.free_dice:
+                        self.energy[self.turn] -= 1
+                    self.free_dice = False
                     self.state.transition_to(STATE_ACTION)
                 else:
+                    # De otra forma, terminar turno avisando que no tiene energía
                     self.insufficient = True
                     self.state.transition_to(STATE_END_OF_TURN)
 
+        # Estado de menú de items
         elif self.state.is_current(STATE_USE_ITEM):
             if self.state.is_entering:
                 self.option_selected = 0
@@ -321,22 +354,38 @@ class Expedition(Scene):
                 self.option_selected = 1
                 self.state.transition_to(STATE_STRATEGY)
         
+        # Estado de mostrar tablero
         elif self.state.is_current(STATE_SHOW_BOARD):
+            # De cualquier tecla de confirmación/cancelación, regresar al menú de estrategia
             if self.input.is_confirm_button_down() or self.input.is_cancel_button_down():
                 self.option_selected = 2
                 self.state.transition_to(STATE_STRATEGY)
         
+        # Estado de acción
         elif self.state.is_current(STATE_ACTION):
+            # Inicializar estado y temporizador
             if self.state.is_entering:
                 self.action_anim_timer.start(500)
             
+            # Si hay pasos por realizar y el temporizador terminó
             if self.dice_result[self.turn] != 0 and self.action_anim_timer.has_finished:
+                # Según la dirección de pasos:
+                # Dar un paso adelante
                 if self.dice_result[self.turn] > 0:
-                    spiral_traversal(self.board, self.position[self.turn], +1)
+                    board.spiral_traversal(self.board, self.position[self.turn], +1)
                     self.dice_result[self.turn] -= 1
+                # O dar un paso hacia atras
                 else:
-                    spiral_traversal(self.board, self.position[self.turn], -1)
+                    board.spiral_traversal(self.board, self.position[self.turn], -1)
                     self.dice_result[self.turn] += 1
+                # Si la posición actual es la casilla de destino
+                if self.board.is_cell_at(self.position[self.turn], CELL_END):
+                    if self.dice_result[self.turn] > 0:
+                        # Rebotar, si no fue exacta la cantidad de posiciones a moverse
+                        self.dice_result[self.turn] = self.dice_result[self.turn] * -1
+                    else:
+                        # Definir como ganador de la partida
+                        print("GANADOR!")
                 self.action_anim_timer.start(500)
 
             if self.dice_result[self.turn] == 0  and self.action_anim_timer.has_finished:
@@ -346,41 +395,52 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_OBSTACLE)
                 else:
                     self.state.transition_to(STATE_END_OF_TURN)
-        
+
+        # Estado de manipulación de estación
         elif self.state.is_current(STATE_STATION):
+            # Al inicio, esperar 3 segundos
             if self.state.is_entering:
                 self.station_anim_timer.start(3000)
             
             if self.station_anim_timer.has_finished:
+                # Consecuencia para Titan
                 if self.board.is_cell_at(self.position[self.turn], CELL_STATION_TITAN):
                     self.energy[self.turn] = min(self.energy[self.turn] + 10, self.max_energy)
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Consecuencia para Sakaar
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_SAKAAR):
                     while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
-                        spiral_traversal(self.board, self.position[self.turn], 1)
+                        board.spiral_traversal(self.board, self.position[self.turn], 1)
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Consecuencia para Ego
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_EGO):
+                    self.free_dice = True
                     self.state.transition_to(STATE_THROW_DICE)
+                # Consecuencia para Asgard
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_ASGARD):
                     self.immunity[self.turn] = True
                     self.state.transition_to(STATE_END_OF_TURN)
+                # Consecuencia para Xandar
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_XANDAR):
                     self.dice_result[self.turn] = 1 #TODO: calcular pasos para la siguiente estación espacial
                     self.state.transition_to(STATE_ACTION)
 
+        # Estado de manipulación de obstáculo
         elif self.state.is_current(STATE_OBSTACLE):
+            # Al inicio, esperar 3 segundos u omitir lógica si el jugador tiene inmunidad
             if self.state.is_entering:
                 if self.immunity[self.turn]:
+                    # Gastar la inmunidad para futuros turnos
                     self.immunity[self.turn] = False
                     self.state.transition_to(STATE_END_OF_TURN)
                 else:
                     self.obstacle_anim_timer.start(3000)
-            
+
             if self.obstacle_anim_timer.has_finished:
                 # Consecuencia para escombros espaciales
                 if self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_DEBRIS):
                     while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
-                        spiral_traversal(self.board, self.position[self.turn], -1)
+                        board.spiral_traversal(self.board, self.position[self.turn], -1)
                     self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para impacto de meteorito
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_METEORITE):
@@ -399,7 +459,7 @@ class Expedition(Scene):
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_SOLAR_RAD):
                     self.dice_result[self.turn] = -1 #TODO: calcular pasos hacia atras para retroceder al sector anterior en la diagonal secundaria
                     self.state.transition_to(STATE_ACTION)
-        
+
         elif self.state.is_current(STATE_END_OF_TURN):
             if self.state.is_entering:
                 self.end_of_turn_timer.start(3000)
@@ -415,7 +475,7 @@ class Expedition(Scene):
                     self.state.transition_to(STATE_MINIGAME)
                 else:
                     self.state.transition_to(STATE_STRATEGY)
-        
+
         elif self.state.is_current(STATE_MINIGAME):
             if self.state.is_entering:
                 self.state.transition_to(STATE_STRATEGY)
@@ -423,6 +483,8 @@ class Expedition(Scene):
         if self.turn is not None:
             self.current_player_pos = self.position[self.turn]
             self.camera_pos = (self.current_player_pos.col * TILE_SIZE + TILE_SIZE // 2, self.current_player_pos.row * TILE_SIZE + TILE_SIZE // 2)
+        else:
+            self.camera_pos = (TILE_SIZE * self.board.size // 2, TILE_SIZE * self.board.size // 2)
 
         self.state.finish_update()
 
@@ -618,7 +680,7 @@ class Expedition(Scene):
                         pygame.draw.rect(screen, color, (j * 32 +50, i * 32+400, 32, 32))
 
     def exit(self, context: GameContext):
-        # stop music
+        # Detener música
         pygame.mixer.music.stop()
 
     def coords_by_camera(self, screen: pygame.Surface, coords: tuple[int, int]) -> tuple[int, int]:
