@@ -1,7 +1,7 @@
 import os
 import struct
         
-TEAM_FILE = 'equipos.bin'
+TEAM_FILE = 'data/equipos.bin'
 TEAM_FORMAT = '20s50s8s'
 TEAM_SIZE = struct.calcsize(TEAM_FORMAT)
 
