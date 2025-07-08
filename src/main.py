@@ -2,6 +2,7 @@ from engine import *
 from starboard.scenes import *
 
 setup = GameSetup("Coconut", [
+    Intro(),
     MainMenu(),
     GameConfig(),
     Expedition(),
