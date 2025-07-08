@@ -2,6 +2,8 @@ from engine import *
 from engine.controllers.ui import Button, InputBox, Text
 from ..constants import *
 from .. import resources
+from ..logic import details
+from ..logic import expeditions
 
 BOX_WIDTH = 140
 BOX_HEIGHT = 32
@@ -41,7 +43,7 @@ class BestStats(Scene):
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Buscar',
-            action=self.id_input(),
+            action=self.id_input(self.input_id.text),
             font=self.font)
 
     def update(self, context: GameContext):
@@ -61,5 +63,11 @@ class BestStats(Scene):
     def exit(self, context: GameContext):
         pass
 
-    def id_input(self):
-        pass
+    def id_input(self, code):
+        exp = open(expeditions.EXPEDITION_FILE, 'rb')
+        det = open(details.DETAILS_FILE, 'rb')
+        while True:
+            bytes = exp.read(expeditions.EXPEDITION_SIZE)
+            if not bytes:
+                break
+            

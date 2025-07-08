@@ -33,7 +33,23 @@ def load_records():
             name = name.decode('utf-8').strip("\x00")
             yield Country(code, name)
 
+def quicksort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[0]
+    left = [x for x in arr[1:] if x < pivot]
+    right = [x for x in arr[1:] if x >= pivot]
+    return quicksort(left)+[pivot]+quicksort(right)
+#test
+def sort_countries():
+    p = list(load_records())
+    print(*(c.name+' '+c.code+',' for c in p))
+
+    for c in p:
+        save_record(c)
+
+    #print(a.name)
 
 if __name__ == "__main__":
     countries = list(load_records())
-    print(countries)
+    sort_countries()

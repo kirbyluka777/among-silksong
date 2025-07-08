@@ -19,7 +19,6 @@ def save_expedition(name1,name2,en_unit,difficulty,direction):
         return EXP_ID
 def read_expeditions():
     with open(EXPEDITION_FILE,'rb') as file:
-        expeditions=[]
         EOF = False
         while not EOF:
             bytes = file.read(EXPEDITION_SIZE)
@@ -27,8 +26,8 @@ def read_expeditions():
                 EOF = True
             else:
                 data = struct.unpack(EXPEDITION_FORMAT,bytes)
-                data[1] = data[1].decode('utf-8')
-                data[2] = data[2].decode('utf-8')
-                data[6] = data[6].decode('utf-8')
-                expeditions.append(data)    
-    return expeditions
+                data[1] = data[1].decode('utf-8').strip('\x00')
+                data[2] = data[2].decode('utf-8').strip('\x00')
+                data[6] = data[6].decode('utf-8').strip('\x00')
+                yield data
+    return
