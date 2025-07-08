@@ -12,10 +12,10 @@ BOX_HEIGHT = 32
 class Options(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(None, 32)
+        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
 
     def start(self, context: GameContext):
-        screen = context.get_screen();
+        screen = context.get_screen()
 
         self.pais = False
         
@@ -26,7 +26,8 @@ class Options(Scene):
             dim=(140,32),
             inactive_color="white",
             active_color=resources.colors.RED,
-            text='Volumen')
+            text='Volumen',
+            font=self.font)
         self.button_registrar = Button(
             context=context,
             pos=(screen.get_width()//2,250),
@@ -34,7 +35,8 @@ class Options(Scene):
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Registrar pais',
-            action=self.toggle_countries)
+            action=self.toggle_countries,
+            font=self.font)
         self.button_done = Button(
             context=context,
             pos=(screen.get_width() // 2 + 200,350), 
@@ -42,7 +44,8 @@ class Options(Scene):
             inactive_color="white", 
             active_color=resources.colors.RED, 
             text='Listo', 
-            action=self.register_country)
+            action=self.register_country,
+            font=self.font)
         self.button_back = Button(
             context=context,
             pos=(100,screen.get_height() - 100),
@@ -50,7 +53,8 @@ class Options(Scene):
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Back',
-            action=lambda: context.scene.change(SCENE_MAIN_MENU))
+            action=lambda: context.scene.change(SCENE_MAIN_MENU),
+            font=self.font)
         
         # Crear cajas de entrada
         self.input_code = InputBox(

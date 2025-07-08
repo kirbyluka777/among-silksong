@@ -9,7 +9,8 @@ class Button:
             inactive_color: str,
             active_color: str,
             text: str = '',
-            action = None):
+            action = None,
+            font: Font = None):
         """
         pos 0 = x
         pos 1 = y
@@ -24,9 +25,9 @@ class Button:
         self.active_color = active_color
         self.current_color = inactive_color
         self.action = action
-        self.font = pygame.font.SysFont('Arial', 40)
+        self.font = font
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface):
         text_surf = self.font.render(self.text, True, self.current_color)
         text_rect = text_surf.get_rect(center=self.rect.center)
 

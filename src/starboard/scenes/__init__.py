@@ -4,3 +4,7 @@ from .wip import Wip
 from .game_config import GameConfig
 from .main_menu import MainMenu
 from .options import Options
+from .create_team import CreateTeam
+from .stats import Stats
+from .stats_best import BestStats
+from .stats_team import TeamStats

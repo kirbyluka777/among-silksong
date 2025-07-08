@@ -2,7 +2,7 @@ import struct
 import os
 from team import Game
 from team import Team
-from team import Country
+#from team import Country
 #from team import Country
 
 FILE_TEAM = 'equipos.bin'

@@ -12,12 +12,12 @@
     - [-] IMPORTANTE : La aplicación debe informar sobre los criterios para la creación de la clave e igualmente debe ir indicando cuales de los criterios no se cumplen al momento de crear la clave, para orientar al usuario sobre su creación.
   - [-] Para la generación de la clave debe utilizar algoritmos recursivos.
   - [-] La clave de seguridad debe almacenarse encriptada. Para ello el sistema debe ofrecer la opción de que el usuario decida encriptarla o no. Se debe diseñar libremente el algoritmo de encriptamiento a utilizar.
-  - [-] Se debe mantener un registro de los países que pueden realizar este tipo de expediciones, con códigos únicos y nombres. Ejemplo : USA : Estados Unidos de Norteamérica, RUS : Rusia, etc, a esta lista se le podrían incorporar nuevos países.
+  - [x] Se debe mantener un registro de los países que pueden realizar este tipo de expediciones, con códigos únicos y nombres. Ejemplo : USA : Estados Unidos de Norteamérica, RUS : Rusia, etc, a esta lista se le podrían incorporar nuevos países.
   - [-] La información de los equipos (identificador, clave, país al que pertenecen, ODS asociado, etc), se deben almacenar en estructuras de almacenamiento permanentes (archivos).
 
 - [ ] Sobre el juego:
   - [x] Podrán participar 2 equipos (cada uno controlando a un astronauta).
-  - [-] Cada juego que se inicie, representará una expedición o viaje estelar, el cual debe quedar identificado con un código único.
+  - [x] Cada juego que se inicie, representará una expedición o viaje estelar, el cual debe quedar identificado con un código único.
   - [x] El juego se desarrollará en un mapa estelar de N x N sectores, donde N es un número impar entre 5 y 19 inclusive.
   - [x] La dimensión del mapa, será acordado entre los dos participantes.
   - [x] El punto de partida será la Tierra (sector 1,1) y el objetivo final será un planeta habitable ubicado en el punto central del mapa, al cual se llegará en un recorrido en espiral.
@@ -56,11 +56,11 @@
 
 - [ ] Otros requerimientos:
   - [-] Antes del juego, los equipos deben registrarse (si no lo están) y elegir el sentido del recorrido (horario o antihorario), asignar las unidades de energía iniciales para cada nave y seleccionar el nivel de dificultad del viaje (básico, medio, avanzado).
-  - [-] Registrar en un archivo llamado EXPEDICIONES ESPACIALES, los datos básicos del viaje, entre los cuales están : el identificador de la expedición(código único que identificará el viaje), los nombre de los equipos que lo realizan, las unidades de energías asignadas inicialmente, el nivel de dificultad de la expedición, el sentido del recorrido del mapa (horario o antihorario) y la fecha de la expedición.
+  - [x] Registrar en un archivo llamado EXPEDICIONES ESPACIALES, los datos básicos del viaje, entre los cuales están : el identificador de la expedición(código único que identificará el viaje), los nombre de los equipos que lo realizan, las unidades de energías asignadas inicialmente, el nivel de dificultad de la expedición, el sentido del recorrido del mapa (horario o antihorario) y la fecha de la expedición.
   - [x] Durante el juego, se mostrará la información de los equipos o naves espaciales (nombre y ODS asociado), el resultado de cada "activación de propulsores", así como las unidades de energía que le van quedando disponibles a cada equipo.
   - [ ] Durante todo el juego, se debe presentar, a modo de espónsor, las imágenes de ODS y acciones alusivos a cada uno de estos, durante cada desplazamiento de las naves.
-  - [ ] Durante el viaje, se debe ir almacenando, en un archivo que pudiera llamarse DETALLE DE VIAJE, los movimientos realizado por cada uno de las naves y los eventos ocurridos durante el viaje. Almacenando entre otros datos: el Código del viaje, Nombre del Equipo, Fecha y Hora de la actividad, Unidades de Propulsión, Tipo de ayuda u obstáculo encontrado, la consecuencia generada, distancia en miles de kilómetros del sector en el que arriba la nave (este dato viene dado por el número consecutivo con el que se identifica cada sector).
-  - [-] Identificar (con imágenes) en el mapa estelar, la existencia de alguna estación espacial o de alguna anomalía espacial.
+  - [x] Durante el viaje, se debe ir almacenando, en un archivo que pudiera llamarse DETALLE DE VIAJE, los movimientos realizado por cada uno de las naves y los eventos ocurridos durante el viaje. Almacenando entre otros datos: el Código del viaje, Nombre del Equipo, Fecha y Hora de la actividad, Unidades de Propulsión, Tipo de ayuda u obstáculo encontrado, la consecuencia generada, distancia en miles de kilómetros del sector en el que arriba la nave (este dato viene dado por el número consecutivo con el que se identifica cada sector).
+  - [x] Identificar (con imágenes) en el mapa estelar, la existencia de alguna estación espacial o de alguna anomalía espacial.
   - [x] Proponer su propio diseño del mapa estelar, sean creativos.
 
 - [ ] Reportes:
@@ -70,7 +70,7 @@
   - [ ] c) Hacer un reporte que muestre el TOP 10, de las expediciones con mayor kilometraje recorrido, presentando el identificador del viaje, el nombre del equipo que lo hizo, el pais de procedencia y total de kilómetros recorrido, para ello utilizar el método de ordenamiento Quicksort
 
 - [ ] Algunas recomendaciones para la construcción de la aplicación:
-  - [-] Utilizar menú intuitivo que permita acceder a cada una de las opciones que ofrece el sistema, para la realización de un juego.
+  - [x] Utilizar menú intuitivo que permita acceder a cada una de las opciones que ofrece el sistema, para la realización de un juego.
   - [-] Desarrollar la aplicación en el lenguaje Python. No todas las funcionalidades están permitidas. Estas deben ser consultadas con el profesor. Por ejemplo, NO está permitido usar funciones de búsqueda y ordenamiento provista por el lenguaje, sino que generen sus propios algoritmos de búsquedas y ordenamientos, así mismo el manejo de exploración de cadenas.
   - [x] Puede utilizar cualquier desarrollador de interfaz compatible con Python, que le permita la construcción de una interfaz amigable, intuitiva y atractiva para los jugadores. Sea creativo.
   - [ ] No olvidar incorporar los elementos de ODS, solicitados.

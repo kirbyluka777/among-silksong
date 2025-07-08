@@ -19,16 +19,21 @@ def save_record(data:Country):
 
         file.write(packed_data)
 
-def load_records(game):
+def load_records():
     if not os.path.isfile(COUNTRY_FILE):
-        return []
-    result = []
+        return
+    #result = []
     with open(COUNTRY_FILE, 'rb') as file:
         while True:
             bytes = file.read(COUNTRY_SIZE)
             if not bytes:
-                return result
-            code, name = struct.unpack(COUNTRY_SIZE, bytes)
+                return
+            code, name = struct.unpack(COUNTRY_FORMAT, bytes)
             code = code.decode('utf-8').strip("\x00")
             name = name.decode('utf-8').strip("\x00")
-            result.append(Country(code, name))
+            yield Country(code, name)
+
+
+if __name__ == "__main__":
+    countries = list(load_records())
+    print(countries)

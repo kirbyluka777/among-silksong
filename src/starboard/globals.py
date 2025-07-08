@@ -1,5 +1,6 @@
 from .constants import *
 
+teams = []
 countries = []
 
 board_size = 9 #BOARD_SIZE_MIN

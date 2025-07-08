@@ -26,6 +26,12 @@ CELL_STATION_EGO_DESCRIPTION = "Tendrás otra oportunidad de activar propulsores
 CELL_STATION_ASGARD_DESCRIPTION = "Obtendrás inmunidad a la siguiente anomalia espacial"
 CELL_STATION_XANDAR_DESCRIPTION = "Avanzarás a la estación espacial más cercana ubicada en la diagonal principal del mapa"
 
+CELL_STATION_DESC = [CELL_STATION_TITAN_DESCRIPTION,
+                     CELL_STATION_SAKAAR_DESCRIPTION,
+                     CELL_STATION_EGO_DESCRIPTION,
+                     CELL_STATION_ASGARD_DESCRIPTION,
+                     CELL_STATION_XANDAR_DESCRIPTION]
+
 CELL_OBSTACLE_DEBRIS_NAME = "Escombros Espaciales"
 CELL_OBSTACLE_METEORITE_NAME = "Meteoritos"
 CELL_OBSTACLE_ASTEROID_NAME = "Impacto de Asteroide"
@@ -37,6 +43,12 @@ CELL_OBSTACLE_METEORITE_DESCRIPTION = "Perdiste un turno"
 CELL_OBSTACLE_ASTEROID_DESCRIPTION = "Perderás 3 unidades de energía"
 CELL_OBSTACLE_COSMIC_RAD_DESCRIPTION = "Perderás 2 unidad de energía"
 CELL_OBSTACLE_SOLAR_RAD_DESCRIPTION = "Retrocederás al sector espacial mas cercano ubicado en la diagonal secundaria del mapa"
+
+CELL_OBSTACLE_DESC = [CELL_OBSTACLE_DEBRIS_DESCRIPTION,
+                      CELL_OBSTACLE_METEORITE_DESCRIPTION,
+                      CELL_OBSTACLE_ASTEROID_DESCRIPTION,
+                      CELL_OBSTACLE_COSMIC_RAD_DESCRIPTION,
+                      CELL_OBSTACLE_SOLAR_RAD_DESCRIPTION]
 
 STATE_DRAFT_MSG = "Quién será el primero en lanzar? El que obtenga el mayor número, le toca!"
 STATE_STRATEGY_MSG = "Cuál será tu próximo paso?"

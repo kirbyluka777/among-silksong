@@ -7,6 +7,8 @@ from ..logic import board
 from ..menu.team import Team
 from .. import globals
 from..logic.items import Item
+from ..logic import expeditions
+from ..logic import details
 
 STATE_DRAFT = 0
 STATE_STRATEGY = 1
@@ -205,6 +207,13 @@ class Expedition(Scene):
         self.draft_ready = [False for _ in range(PLAYER_COUNT)]
         self.camera_pos = (0, 0)
 
+        # Crear archivo de expedicion
+        self.expedition_id = expeditions.save_expedition(self.teams[TURN_PLAYER_ONE].name,
+                                    self.teams[TURN_PLAYER_TWO].name,
+                                    self.board.size,
+                                    self.board.difficulty,
+                                    self.board.dir)
+
         # Reproducir música
         pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
         pygame.mixer.music.play(-1)
@@ -329,6 +338,13 @@ class Expedition(Scene):
                     if not self.free_dice:
                         self.energy[self.turn] -= 1
                     self.free_dice = False
+                    details.save_details(
+                        id=self.expedition_id,
+                        event_type=details.EVENT_MOVE,
+                        player_id=self.turn,
+                        steps=self.dice_result[self.turn],
+                        index=self.board.cell_at(self.position[self.turn])[0]
+                    )
                     self.state.transition_to(STATE_ACTION)
                 else:
                     # De otra forma, terminar turno avisando que no tiene energía
@@ -349,7 +365,7 @@ class Expedition(Scene):
                 if self.items[self.turn]:
                     print(self.items[self.turn][self.option_selected].print_item_data())
                     self.items[self.turn].pop(self.option_selected)
-                    self.option_selected -= 1 if self.option_selected > 1 else 0
+                    self.option_selected -= 1 if self.option_selected > 0 else 0
             elif self.input.is_cancel_button_down():
                 self.option_selected = 1
                 self.state.transition_to(STATE_STRATEGY)
@@ -424,6 +440,14 @@ class Expedition(Scene):
                 elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_XANDAR):
                     self.dice_result[self.turn] = 1 #TODO: calcular pasos para la siguiente estación espacial
                     self.state.transition_to(STATE_ACTION)
+                cell_type = self.board.cell_at(self.position[self.turn])[1]
+                details.save_details(
+                    id=self.expedition_id,
+                    event_type=details.EVENT_CELL_VISIT,
+                    player_id=self.turn,
+                    cell_type=cell_type,
+                    consequence=resources.locale.CELL_STATION_DESC[cell_type-CELL_STATION_TITAN]
+                )
 
         # Estado de manipulación de obstáculo
         elif self.state.is_current(STATE_OBSTACLE):
@@ -459,6 +483,14 @@ class Expedition(Scene):
                 elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_SOLAR_RAD):
                     self.dice_result[self.turn] = -1 #TODO: calcular pasos hacia atras para retroceder al sector anterior en la diagonal secundaria
                     self.state.transition_to(STATE_ACTION)
+                cell_type = self.board.cell_at(self.position[self.turn])[1]
+                details.save_details(
+                    id=self.expedition_id,
+                    event_type=details.EVENT_CELL_VISIT,
+                    player_id=self.turn,
+                    cell_type=cell_type,
+                    consequence=resources.locale.CELL_OBSTACLE_DESC[cell_type-CELL_OBSTACLE_DEBRIS]
+                )
 
         elif self.state.is_current(STATE_END_OF_TURN):
             if self.state.is_entering:
