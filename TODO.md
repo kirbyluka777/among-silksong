@@ -37,21 +37,21 @@
   - [x] Durante el recorrido se presentarán obstáculos que tendrán consecuencias no favorables para el viaje, estos obstáculos o anomalías espaciales pueden presentarse o encontrarse en un determinado sector, así mismo habrá estaciones espaciales que apoyarán a las naves a completar su recorrido. No todos los sectores tendrán anomalías espaciales ni estaciones espaciales.
   - [x] Por acuerdos internacionales, dos naves pueden llegar a un mismo sector, sin que una afecte el recorrido de la otra.
   - [x] Para llegar hasta el Planeta destino se debe llegar con la energía de propulsión exacta, de no ser así se producirá un efecto rebote, que lo hará retroceder tantos sectores como energía excedente a la requerida para llegar al planeta objetivo, sin desperdicio, luego se debe intentar avanzar nuevamente para llegar al sector donde se encuentra la Planeta objetivo.
-  - [-] En algunas de los sectores existirán, de forma aleatoria, ayudas u obstáculos espaciales, que facilitarán o dificultarán el avance de las expediciones, estas se detallan a continuación:
-    - [-] Ayudas:
+  - [x] En algunas de los sectores existirán, de forma aleatoria, ayudas u obstáculos espaciales, que facilitarán o dificultarán el avance de las expediciones, estas se detallan a continuación:
+    - [x] Ayudas:
         Estación espacial          Consecuencia
       - [x] Titán                  Recargar 10 unidades de energía
       - [x] Sakaar                 Avanza al sector más cercano desocupado
       - [x] Ego                    Activación de propulsores
       - [x] Asgard                 Inmunidad a la siguiente anomalia espacial
-      - [-] Xandar                 Avanza a la estación espacial más cercana ubicada en la diagonal principal del mapa
-    - [-] Obstáculos espaciales:
+      - [x] Xandar                 Avanza a la estación espacial más cercana ubicada en la diagonal principal del mapa
+    - [x] Obstáculos espaciales:
         Anomalía                   Consecuencia
       - [x] Escombros espaciales   Retrocede un sector
       - [x] Meteoritos             Sin avance
       - [x] Impacto de asteroide   Pérdida de 3 unidades de energía
       - [x] Radiación cósmica      Pérdida de 2 unidad de energía
-      - [-] Radiación solar        Retrocede al sector espacial mas cercano ubicado en la diagonal secundaria del mapa
+      - [x] Radiación solar        Retrocede al sector espacial mas cercano ubicado en la diagonal secundaria del mapa
   - [x] Los sectores que contendrán los estaciones espaciales o anomalías espaciales deben ser escogidas por el sistema de forma aleatoria, según el dificultad del juego (Básico, Medio o Avanzado).
 
 - [ ] Otros requerimientos:

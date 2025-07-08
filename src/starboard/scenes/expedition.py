@@ -288,7 +288,7 @@ class Expedition(Scene):
                         self.state.transition_to(STATE_SHOW_BOARD)
 
                 # Aciones especiales de depurraión
-                if keys_down[pygame.K_x]:
+                if keys_down[pygame.K_F1]:
                     self.dice_result[self.turn] = self.board.size**2 - 2
                     self.state.transition_to(STATE_ACTION)
         
@@ -343,7 +343,7 @@ class Expedition(Scene):
                         event_type=details.EVENT_MOVE,
                         player_id=self.turn,
                         steps=self.dice_result[self.turn],
-                        index=self.board.cell_at(self.position[self.turn])[0]
+                        index=board.cell_at(self.board, self.position[self.turn])[0]
                     )
                     self.state.transition_to(STATE_ACTION)
                 else:
@@ -395,7 +395,7 @@ class Expedition(Scene):
                     board.spiral_traversal(self.board, self.position[self.turn], -1)
                     self.dice_result[self.turn] += 1
                 # Si la posición actual es la casilla de destino
-                if self.board.is_cell_at(self.position[self.turn], CELL_END):
+                if board.is_cell_at(self.board, self.position[self.turn], CELL_END):
                     if self.dice_result[self.turn] > 0:
                         # Rebotar, si no fue exacta la cantidad de posiciones a moverse
                         self.dice_result[self.turn] = self.dice_result[self.turn] * -1
@@ -405,9 +405,9 @@ class Expedition(Scene):
                 self.action_anim_timer.start(500)
 
             if self.dice_result[self.turn] == 0  and self.action_anim_timer.has_finished:
-                if self.board.is_cell_station_at(self.position[self.turn]):
+                if board.is_cell_station_at(self.board, self.position[self.turn]):
                     self.state.transition_to(STATE_STATION)
-                elif self.board.is_cell_obstacle_at(self.position[self.turn]):
+                elif board.is_cell_obstacle_at(self.board, self.position[self.turn]):
                     self.state.transition_to(STATE_OBSTACLE)
                 else:
                     self.state.transition_to(STATE_END_OF_TURN)
@@ -420,34 +420,39 @@ class Expedition(Scene):
             
             if self.station_anim_timer.has_finished:
                 # Consecuencia para Titan
-                if self.board.is_cell_at(self.position[self.turn], CELL_STATION_TITAN):
+                if board.is_cell_at(self.board, self.position[self.turn], CELL_STATION_TITAN):
                     self.energy[self.turn] = min(self.energy[self.turn] + 10, self.max_energy)
                     self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para Sakaar
-                elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_SAKAAR):
-                    while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
-                        board.spiral_traversal(self.board, self.position[self.turn], 1)
-                    self.state.transition_to(STATE_END_OF_TURN)
+                elif board.is_cell_at(self.board, self.position[self.turn], CELL_STATION_SAKAAR):
+                    self.dice_result[self.turn] = board.calc_steps_to_next_space(self.board, self.position[self.turn])
+                    if self.dice_result[self.turn] > 0:
+                        self.state.transition_to(STATE_ACTION)
+                    else:
+                        self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para Ego
-                elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_EGO):
+                elif board.is_cell_at(self.board, self.position[self.turn], CELL_STATION_EGO):
                     self.free_dice = True
                     self.state.transition_to(STATE_THROW_DICE)
                 # Consecuencia para Asgard
-                elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_ASGARD):
+                elif board.is_cell_at(self.board, self.position[self.turn], CELL_STATION_ASGARD):
                     self.immunity[self.turn] = True
                     self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para Xandar
-                elif self.board.is_cell_at(self.position[self.turn], CELL_STATION_XANDAR):
-                    self.dice_result[self.turn] = 1 #TODO: calcular pasos para la siguiente estación espacial
-                    self.state.transition_to(STATE_ACTION)
-                cell_type = self.board.cell_at(self.position[self.turn])[1]
+                elif board.is_cell_at(self.board, self.position[self.turn], CELL_STATION_XANDAR):
+                    self.dice_result[self.turn] = board.calc_steps_to_next_main_diagonal(self.board, self.position[self.turn])
+                    if self.dice_result[self.turn] > 0:
+                        self.state.transition_to(STATE_ACTION)
+                    else:
+                        self.state.transition_to(STATE_END_OF_TURN)
+                # Guardar detalles de la consecuencia
+                cell_type = board.cell_at(self.board, self.position[self.turn])[1]
                 details.save_details(
                     id=self.expedition_id,
                     event_type=details.EVENT_CELL_VISIT,
                     player_id=self.turn,
                     cell_type=cell_type,
-                    consequence=resources.locale.CELL_STATION_DESC[cell_type-CELL_STATION_TITAN]
-                )
+                    consequence=resources.locale.CELL_STATION_DESC[cell_type-CELL_STATION_TITAN])
 
         # Estado de manipulación de obstáculo
         elif self.state.is_current(STATE_OBSTACLE):
@@ -462,35 +467,40 @@ class Expedition(Scene):
 
             if self.obstacle_anim_timer.has_finished:
                 # Consecuencia para escombros espaciales
-                if self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_DEBRIS):
-                    while not self.board.is_cell_at(self.position[self.turn], CELL_SPACE):
-                        board.spiral_traversal(self.board, self.position[self.turn], -1)
-                    self.state.transition_to(STATE_END_OF_TURN)
+                if board.is_cell_at(self.board, self.position[self.turn], CELL_OBSTACLE_DEBRIS):
+                    self.dice_result[self.turn] = board.calc_steps_to_last_space(self.board, self.position[self.turn])
+                    if self.dice_result[self.turn] < 0:
+                        self.state.transition_to(STATE_ACTION)
+                    else:
+                        self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para impacto de meteorito
-                elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_METEORITE):
+                elif board.is_cell_at(self.board, self.position[self.turn], CELL_OBSTACLE_METEORITE):
                     self.disabled[self.turn] = True
                     self.disabled_now = True
                     self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para asteroide
-                elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_ASTEROID):
+                elif board.is_cell_at(self.board, self.position[self.turn], CELL_OBSTACLE_ASTEROID):
                     self.energy[self.turn] = max(self.energy[self.turn] - 3, 0)
                     self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para radiación cósmica
-                elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_COSMIC_RAD):
+                elif board.is_cell_at(self.board, self.position[self.turn], CELL_OBSTACLE_COSMIC_RAD):
                     self.energy[self.turn] = max(self.energy[self.turn] - 2, 0)
                     self.state.transition_to(STATE_END_OF_TURN)
                 # Consecuencia para radiación solar
-                elif self.board.is_cell_at(self.position[self.turn], CELL_OBSTACLE_SOLAR_RAD):
-                    self.dice_result[self.turn] = -1 #TODO: calcular pasos hacia atras para retroceder al sector anterior en la diagonal secundaria
-                    self.state.transition_to(STATE_ACTION)
-                cell_type = self.board.cell_at(self.position[self.turn])[1]
+                elif board.is_cell_at(self.board, self.position[self.turn], CELL_OBSTACLE_SOLAR_RAD):
+                    self.dice_result[self.turn] = board.calc_steps_to_last_secondary_diagonal(self.board, self.position[self.turn])
+                    if self.dice_result[self.turn] < 0:
+                        self.state.transition_to(STATE_ACTION)
+                    else:
+                        self.state.transition_to(STATE_END_OF_TURN)
+                # Guardar detalles de la consecuencia
+                cell_type = board.cell_at(self.board, self.position[self.turn])[1]
                 details.save_details(
                     id=self.expedition_id,
                     event_type=details.EVENT_CELL_VISIT,
                     player_id=self.turn,
                     cell_type=cell_type,
-                    consequence=resources.locale.CELL_OBSTACLE_DESC[cell_type-CELL_OBSTACLE_DEBRIS]
-                )
+                    consequence=resources.locale.CELL_OBSTACLE_DESC[cell_type-CELL_OBSTACLE_DEBRIS])
 
         elif self.state.is_current(STATE_END_OF_TURN):
             if self.state.is_entering:
@@ -531,28 +541,28 @@ class Expedition(Scene):
         # Dibujar tablero
         for i in range(0, self.board.size, +1):
             for j in range(0, self.board.size, +1):
-                cell = self.board.cell_at((i, j))
+                cell = board.cell_at(self.board, (i, j))
                 coords = self.coords_by_camera(screen, (j * TILE_SIZE, i * TILE_SIZE))
                 # Dibujar inicio
-                if self.board.is_cell_at((i, j), CELL_HOME):
+                if board.is_cell_at(self.board, (i, j), CELL_HOME):
                     screen.blit(self.home_img, coords)
                 # Dibujar destino
-                elif self.board.is_cell_at((i, j), CELL_END):
+                elif board.is_cell_at(self.board, (i, j), CELL_END):
                     screen.blit(self.end_img, coords)
                 # Dibujar estación
-                elif self.board.is_cell_station_at((i, j)):
+                elif board.is_cell_station_at(self.board, (i, j)):
                     station_img = self.station_imgs[cell[1] - CELL_STATION_TITAN]
                     screen.blit(station_img, coords)
                     # Dibujar el nombre de la estación si el jugador del turno actual está encima:
-                    if self.turn is not None and cell[0] == self.board.cell_at(self.position[self.turn])[0]:
+                    if self.turn is not None and cell[0] == board.cell_at(self.board, self.position[self.turn])[0]:
                         station_text = self.text_station_name[cell[1] - CELL_STATION_TITAN]
                         screen.blit(station_text, (coords[0] + TILE_SIZE // 2 - station_text.get_width() // 2, coords[1] - 40))
                 # Dibujar obstaculo
-                elif self.board.is_cell_obstacle_at((i, j)):
+                elif board.is_cell_obstacle_at(self.board, (i, j)):
                     obstacle_img = self.obstacle_imgs[cell[1] - CELL_OBSTACLE_DEBRIS]
                     screen.blit(obstacle_img, coords)
                     # Dibujar el nombre del obstáculo si el jugador del turno actual está encima:
-                    if self.turn is not None and cell[0] == self.board.cell_at(self.position[self.turn])[0]:
+                    if self.turn is not None and cell[0] == board.cell_at(self.board, self.position[self.turn])[0]:
                         obstacle_text = self.text_obstacle[cell[1] - CELL_OBSTACLE_DEBRIS]
                         screen.blit(obstacle_text, (coords[0] + TILE_SIZE // 2 - obstacle_text.get_width() // 2, coords[1] - 40))
                 # Dibujar puntito
@@ -615,15 +625,15 @@ class Expedition(Scene):
 
         # Dibujar descripción de consecuencia
         # Para obstáculos:
-        if self.state.is_current(STATE_OBSTACLE) and self.board.is_cell_obstacle_at(self.position[self.turn]):
-            cell = self.board.cell_at(self.position[self.turn])
+        if self.state.is_current(STATE_OBSTACLE) and board.is_cell_obstacle_at(self.board, self.position[self.turn]):
+            cell = board.cell_at(self.board, self.position[self.turn])
             description_text = self.text_obstacle_description[cell[1] - CELL_OBSTACLE_DEBRIS]
             coords = (screen.get_width() // 2 - description_text.get_width() // 2, screen.get_height() * 3/4 - description_text.get_height() // 2)
             pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, description_text.get_width() + 20, description_text.get_height() + 20), border_radius=10)
             screen.blit(description_text, coords)
         # Para estaciones:
-        if self.state.is_current(STATE_STATION) and self.board.is_cell_station_at(self.position[self.turn]):
-            cell = self.board.cell_at(self.position[self.turn])
+        if self.state.is_current(STATE_STATION) and board.is_cell_station_at(self.board, self.position[self.turn]):
+            cell = board.cell_at(self.board, self.position[self.turn])
             description_text = self.text_station_description[cell[1] - CELL_STATION_TITAN]
             coords = (screen.get_width() // 2 - description_text.get_width() // 2, screen.get_height() * 3/4 - description_text.get_height() // 2)
             pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, description_text.get_width() + 20, description_text.get_height() + 20), border_radius=10)
