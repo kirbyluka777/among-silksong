@@ -20,6 +20,8 @@ STATE_STATION = 6
 STATE_OBSTACLE = 7
 STATE_END_OF_TURN = 8
 STATE_MINIGAME = 9
+STATE_WIN = 10
+STATE_TIES = 11
 
 TURN_PLAYER_ONE = 0
 TURN_PLAYER_TWO = 1
@@ -99,6 +101,19 @@ class Expedition(Scene):
         self.img_key_icon_m = pygame.image.load(resources.images.KEY_ICON_M)
         self.img_key_icon_m = pygame.transform.scale(self.img_key_icon_m, (32, 32))
 
+        self.img_ties = pygame.image.load(resources.images.TIES)
+        self.img_ties = pygame.transform.scale(self.img_ties, (screen_rect.height * 2/3, screen_rect.height * 2/3))
+        self.img_end_big = [
+            pygame.image.load(resources.images.CELL_END),
+            pygame.image.load(resources.images.CELL_END_2),
+        ]
+        for i in range(0, len(self.img_end_big), +1):
+            self.img_end_big[i] = pygame.transform.scale(self.img_end_big[i], (screen_rect.height * 2/3, screen_rect.height * 2/3))
+            self.img_end_big[i].convert_alpha()
+
+        self.img_dark_overlay = pygame.Surface(screen_rect.size, pygame.SRCALPHA)
+        self.img_dark_overlay.fill((0, 0, 0, 128))
+
         self.menu_font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
 
         self.text_press = self.menu_font.render(resources.locale.PRESS, True, resources.colors.ui_text_primary)
@@ -115,6 +130,7 @@ class Expedition(Scene):
         self.text_skipped_turn = self.menu_font.render(resources.locale.SKIPPED_TURN, True, resources.colors.ui_text_primary)
         self.text_not_enough_energy = self.menu_font.render(resources.locale.NOT_ENOUGH_ENERGY, True, resources.colors.ui_text_primary)
         self.text_repeat_draft = self.menu_font.render(resources.locale.REPEAT_DRAFT, True, resources.colors.ui_text_primary)
+        self.text_ties = self.menu_font.render(resources.locale.TIES_MSG, True, resources.colors.ui_text_primary)
 
         self.text_player_turn = [
             self.menu_font.render(resources.locale.TURN_OF_PLAYER_FMT.format(self.teams[i].name), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
@@ -128,6 +144,9 @@ class Expedition(Scene):
         self.text_draft_to_team = [
             self.menu_font.render(resources.locale.DRAFT_TO_PLAYER_FMT.format(self.teams[i].name), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
         ]
+        self.text_congratulations_to_team = [
+            self.menu_font.render(resources.locale.CONGRATULATIONS_TO_PLAYER_FMT.format(self.teams[i].name), True, resources.colors.ui_text_primary) for i in range(0, PLAYER_COUNT)
+        ]
 
         self.text_state = [
             self.menu_font.render(resources.locale.STATE_DRAFT_MSG, True, resources.colors.ui_text_primary),
@@ -140,6 +159,8 @@ class Expedition(Scene):
             self.menu_font.render(resources.locale.STATE_OBSTACLE_MSG, True, resources.colors.ui_text_primary),
             self.menu_font.render(resources.locale.STATE_END_OF_TURN_MSG, True, resources.colors.ui_text_primary),
             self.menu_font.render(resources.locale.STATE_MINIGAME_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_WIN_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_TIES_MSG, True, resources.colors.ui_text_primary),
         ]
 
         self.text_indices = [self.menu_font.render(str(i + 1), True, "white") for i in range(globals.board_size**2)]
@@ -187,6 +208,7 @@ class Expedition(Scene):
         self.station_anim_timer = TimerController(context)
         self.obstacle_anim_timer = TimerController(context)
         self.end_of_turn_timer = TimerController(context)
+        self.endgame_timer = TimerController(context)
 
         # Inicializar estado
         self.board = board.generate_random_board(globals.board_size, globals.board_difficulty, globals.board_dir)
@@ -220,7 +242,10 @@ class Expedition(Scene):
         pygame.mixer.music.set_volume(0.5)
 
     def update(self, context: GameContext):
+        # Capturar valores básicos del juego
         keys_down = context.get_keys_down()
+
+        # Inicializar lógica por frame de componentes
         self.state.init_update()
 
         # Estado de selección de primer turno
@@ -287,10 +312,17 @@ class Expedition(Scene):
                     elif self.option_selected == STRATEGY_OPTION_SHOW_MAP:
                         self.state.transition_to(STATE_SHOW_BOARD)
 
-                # Aciones especiales de depurraión
-                if keys_down[pygame.K_F1]:
+                # Aciones especiales de depuración
+                if keys_down[pygame.K_F1]: # avanzar hasta una casilla antes del destino
                     self.dice_result[self.turn] = self.board.size**2 - 2
                     self.state.transition_to(STATE_ACTION)
+                elif keys_down[pygame.K_F2]: # ganar automáticamente
+                    self.state.transition_to(STATE_WIN)
+                elif keys_down[pygame.K_F3]: # establecer empate automáticamente
+                    self.state.transition_to(STATE_TIES)
+                elif keys_down[pygame.K_F4]: # gastar toda la energía
+                    self.energy[self.turn] = 0
+                    self.state.transition_to(STATE_END_OF_TURN)
         
         # Estado de lanzar dado
         elif self.state.is_current(STATE_THROW_DICE):
@@ -313,19 +345,19 @@ class Expedition(Scene):
                 elif self.input.is_confirm_button_down():
                     self.dice_thrown_timer.start(2000)
                 # Acciones especiales para depuración del programa (seleccionar valor de dado)
-                elif context.get_keys_down()[pygame.K_1]:
+                elif keys_down[pygame.K_1]:
                     self.dice_result[self.turn] = 1
                     self.dice_thrown_timer.start(2000)
-                elif context.get_keys_down()[pygame.K_2]:
+                elif keys_down[pygame.K_2]:
                     self.dice_result[self.turn] = 2
                     self.dice_thrown_timer.start(2000)
-                elif context.get_keys_down()[pygame.K_3]:
+                elif keys_down[pygame.K_3]:
                     self.dice_result[self.turn] = 3
                     self.dice_thrown_timer.start(2000)
-                elif context.get_keys_down()[pygame.K_4]:
+                elif keys_down[pygame.K_4]:
                     self.dice_result[self.turn] = 4
                     self.dice_thrown_timer.start(2000)
-                elif context.get_keys_down()[pygame.K_5]:
+                elif keys_down[pygame.K_5]:
                     self.dice_result[self.turn] = 5
                     self.dice_thrown_timer.start(2000)
 
@@ -337,7 +369,9 @@ class Expedition(Scene):
                     # Gastar un punto de nergia si no es dado gratutio
                     if not self.free_dice:
                         self.energy[self.turn] -= 1
+                    # Reiniciar dado gratuito para siguientes turnos
                     self.free_dice = False
+                    # Guardar detalles del movimiento a realizar
                     details.save_details(
                         id=self.expedition_id,
                         event_type=details.EVENT_MOVE,
@@ -351,7 +385,7 @@ class Expedition(Scene):
                     self.insufficient = True
                     self.state.transition_to(STATE_END_OF_TURN)
 
-        # Estado de menú de items
+        # Estado de menú de items (trabajo en progreso, depende del minijuego)
         elif self.state.is_current(STATE_USE_ITEM):
             if self.state.is_entering:
                 self.option_selected = 0
@@ -395,20 +429,21 @@ class Expedition(Scene):
                     board.spiral_traversal(self.board, self.position[self.turn], -1)
                     self.dice_result[self.turn] += 1
                 # Si la posición actual es la casilla de destino
-                if board.is_cell_at(self.board, self.position[self.turn], CELL_END):
-                    if self.dice_result[self.turn] > 0:
-                        # Rebotar, si no fue exacta la cantidad de posiciones a moverse
-                        self.dice_result[self.turn] = self.dice_result[self.turn] * -1
-                    else:
-                        # Definir como ganador de la partida
-                        print("GANADOR!")
+                if board.is_cell_at(self.board, self.position[self.turn], CELL_END) and self.dice_result[self.turn] > 0:
+                    # Rebotar, si no fue exacta la cantidad de posiciones a moverse
+                    self.dice_result[self.turn] = self.dice_result[self.turn] * -1
+                # Volver a comenzar el temporizador de acción
                 self.action_anim_timer.start(500)
 
+            # Si no hay más pasos por realizar
             if self.dice_result[self.turn] == 0  and self.action_anim_timer.has_finished:
+                # Y cayó en una estación, realizar lógica
                 if board.is_cell_station_at(self.board, self.position[self.turn]):
                     self.state.transition_to(STATE_STATION)
+                # Si cayó en un obstacúlo, manipularlo respectivamente
                 elif board.is_cell_obstacle_at(self.board, self.position[self.turn]):
                     self.state.transition_to(STATE_OBSTACLE)
+                # Sino, finalizar turno
                 else:
                     self.state.transition_to(STATE_END_OF_TURN)
 
@@ -502,36 +537,82 @@ class Expedition(Scene):
                     cell_type=cell_type,
                     consequence=resources.locale.CELL_OBSTACLE_DESC[cell_type-CELL_OBSTACLE_DEBRIS])
 
+        # Estado de fin de turno
         elif self.state.is_current(STATE_END_OF_TURN):
+            # Al inicio, esperar 3 segundos
             if self.state.is_entering:
                 self.end_of_turn_timer.start(3000)
             
+            # Después de los 3 segundos
             if self.end_of_turn_timer.has_finished:
-                if not self.disabled_now:
-                    self.disabled[self.turn] = False
-                self.turn = (self.turn + 1) % PLAYER_COUNT
-                self.insufficient = False
-                self.disabled_now = False
-                self.option_selected = 0
-                if self.turn == TURN_PLAYER_ONE and self.minigames:
-                    self.state.transition_to(STATE_MINIGAME)
+                # Si el jugador se encuentra en el destino
+                if board.is_cell_end_at(self.board, self.position[self.turn]):
+                    # Declararlo como ganador de partida
+                    self.state.transition_to(STATE_WIN)
+                # Si ambos jugadores se quedaron sin energía
+                elif self.energy[TURN_PLAYER_ONE] <= 0 and self.energy[TURN_PLAYER_ONE] <= 0:
+                    # Declararlo como empate
+                    self.state.transition_to(STATE_TIES)
+                # Sino, pasar de turno y reiniciar estado para el menú de estrategia
                 else:
-                    self.state.transition_to(STATE_STRATEGY)
+                    if not self.disabled_now:
+                        self.disabled[self.turn] = False
+                    self.turn = (self.turn + 1) % PLAYER_COUNT
+                    self.insufficient = False
+                    self.disabled_now = False
+                    self.option_selected = 0
+                    if self.turn == TURN_PLAYER_ONE and self.minigames:
+                        self.state.transition_to(STATE_MINIGAME)
+                    else:
+                        self.state.transition_to(STATE_STRATEGY)
 
+        # Estado de minijuego (no funcional, omite a modo estrategia)
         elif self.state.is_current(STATE_MINIGAME):
             if self.state.is_entering:
                 self.state.transition_to(STATE_STRATEGY)
+        
+        # Estado de partida ganada
+        elif self.state.is_current(STATE_WIN):
+            # Al inicio, comenzar temporizador de 5 segundos
+            if self.state.is_entering:
+                self.endgame_timer.start(5000)
 
-        if self.turn is not None:
+            if self.endgame_timer.has_started:
+                # Hacer desaparecer el planeta sin limpiar
+                self.img_end_big[0].set_alpha(255 - min(self.endgame_timer.ticks_elapsed * 255 // 4500, 255))
+            
+            # Después de 5 segundos
+            if self.endgame_timer.has_finished:
+                # Si el jugador confirma, ir a la pantalla de créditos
+                if self.input.is_confirm_button_down():
+                    context.scene.change(SCENE_CREDITS)
+        
+        # Estado de partida ganada
+        elif self.state.is_current(STATE_TIES):
+            # Al inicio, comenzar temporizador de 5 segundos
+            if self.state.is_entering:
+                self.endgame_timer.start(5000)
+            
+            # Después de 5 segundos
+            if self.endgame_timer.has_finished:
+                # Si el jugador confirma, ir al menú principal
+                if self.input.is_confirm_button_down():
+                    context.scene.change(SCENE_MAIN_MENU)
+
+        # Si hay un turno activo y la partida no ha finalizado, poner la camara sobre el jugador activo
+        if self.turn is not None and not self.state.is_current(STATE_WIN) and not self.state.is_current(STATE_TIES):
             self.current_player_pos = self.position[self.turn]
             self.camera_pos = (self.current_player_pos.col * TILE_SIZE + TILE_SIZE // 2, self.current_player_pos.row * TILE_SIZE + TILE_SIZE // 2)
         else:
+            # De otra forma, poner la camara sobre el centro del tablero
             self.camera_pos = (TILE_SIZE * self.board.size // 2, TILE_SIZE * self.board.size // 2)
 
+        # Finalizar lógica por frame de componentes
         self.state.finish_update()
 
     def draw(self, context: GameContext):
         screen = context.get_screen()
+        screen_rect = context.get_screen_rect()
 
         # Dibujar fondo espacial
         for i in range(0, 3, +1):
@@ -587,15 +668,15 @@ class Expedition(Scene):
         if self.state.is_current(STATE_THROW_DICE):
             dice = self.dice[self.dice_result[self.turn] - 1]
             if not self.dice_thrown_timer.has_started or self.dice_thrown_timer.ticks_elapsed // 250 % 2 == 0 and self.dice_thrown_timer.ticks_elapsed < 2000:
-                screen.blit(dice, (screen.get_width() // 2 - dice.get_width() // 2, screen.get_height() * 3/4 - dice.get_height() // 2))
+                screen.blit(dice, (screen_rect.centerx - dice.get_width() // 2, screen_rect.height * 3/4 - dice.get_height() // 2))
 
         # Dibujar draft
         if self.state.is_current(STATE_DRAFT):
             player_key_img = [self.img_key_icon_z, self.img_key_icon_m]
             for i in range(0, PLAYER_COUNT, +1):
                 dice = self.dice[self.dice_result[i] - 1]
-                center_x = screen.get_width() * (1+i*2)/4
-                center_y = screen.get_height() // 2
+                center_x = screen_rect.width * (1+i*2)/4
+                center_y = screen_rect.centery
                 # Dibujar dado
                 if not self.draft_completed_timer.has_started or self.draft_completed_timer.ticks_elapsed // 250 % 2 == 0 and self.draft_completed_timer.ticks_elapsed < 2000:
                     screen.blit(dice, (center_x - dice.get_width() // 2, center_y - dice.get_height() // 2))
@@ -619,7 +700,7 @@ class Expedition(Scene):
                     draft_result_text = self.text_draft_to_team[TURN_PLAYER_TWO]
                 else:
                     draft_result_text = self.text_repeat_draft
-                coords = (screen.get_width() // 2 - draft_result_text.get_width() // 2, screen.get_height() * 3/4 - draft_result_text.get_height() // 2)
+                coords = (screen_rect.centerx - draft_result_text.get_width() // 2, screen_rect.height * 3/4 - draft_result_text.get_height() // 2)
                 pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, draft_result_text.get_width() + 20, draft_result_text.get_height() + 20), border_radius=10)
                 screen.blit(draft_result_text, coords)
 
@@ -628,14 +709,14 @@ class Expedition(Scene):
         if self.state.is_current(STATE_OBSTACLE) and board.is_cell_obstacle_at(self.board, self.position[self.turn]):
             cell = board.cell_at(self.board, self.position[self.turn])
             description_text = self.text_obstacle_description[cell[1] - CELL_OBSTACLE_DEBRIS]
-            coords = (screen.get_width() // 2 - description_text.get_width() // 2, screen.get_height() * 3/4 - description_text.get_height() // 2)
+            coords = (screen_rect.centerx - description_text.get_width() // 2, screen_rect.height * 3/4 - description_text.get_height() // 2)
             pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, description_text.get_width() + 20, description_text.get_height() + 20), border_radius=10)
             screen.blit(description_text, coords)
         # Para estaciones:
         if self.state.is_current(STATE_STATION) and board.is_cell_station_at(self.board, self.position[self.turn]):
             cell = board.cell_at(self.board, self.position[self.turn])
             description_text = self.text_station_description[cell[1] - CELL_STATION_TITAN]
-            coords = (screen.get_width() // 2 - description_text.get_width() // 2, screen.get_height() * 3/4 - description_text.get_height() // 2)
+            coords = (screen_rect.centerx - description_text.get_width() // 2, screen_rect.height * 3/4 - description_text.get_height() // 2)
             pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, description_text.get_width() + 20, description_text.get_height() + 20), border_radius=10)
             screen.blit(description_text, coords)
 
@@ -647,7 +728,7 @@ class Expedition(Scene):
             elif self.insufficient:
                 text = self.text_not_enough_energy
             if text:
-                coords = (screen.get_width() // 2 - text.get_width() // 2, screen.get_height() * 3/4 - text.get_height() // 2)
+                coords = (screen_rect.centerx - text.get_width() // 2, screen_rect.height * 3/4 - text.get_height() // 2)
                 pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, text.get_width() + 20, text.get_height() + 20), border_radius=10)
                 screen.blit(text, coords)
 
@@ -655,19 +736,13 @@ class Expedition(Scene):
         if self.turn is not None:
             turn_text = self.text_player_turn[self.turn]
             turn_text_box_width = turn_text.get_width() + 50 * 2
-            pygame.draw.rect(screen, "white", (screen.get_width() // 2 - turn_text_box_width // 2, 0, turn_text_box_width, 32), border_bottom_left_radius=10, border_bottom_right_radius=10)
-            screen.blit(turn_text, (screen.get_width() // 2 - turn_text.get_width() // 2, 4))
-
-        # Dibujar indicador de estado
-        state_text = self.text_state[self.state.current_state]
-        state_text_box_width = state_text.get_width() + 50 * 2
-        pygame.draw.rect(screen, "white", (screen.get_width() // 2 - state_text_box_width // 2, screen.get_height() - 32, state_text_box_width, 32), border_top_left_radius=10, border_top_right_radius=10)
-        screen.blit(state_text, (screen.get_width() // 2 - state_text.get_width() // 2, screen.get_height() - state_text.get_height()))
+            pygame.draw.rect(screen, "white", (screen_rect.centerx - turn_text_box_width // 2, 0, turn_text_box_width, 32), border_bottom_left_radius=10, border_bottom_right_radius=10)
+            screen.blit(turn_text, (screen_rect.centerx - turn_text.get_width() // 2, 4))
 
         # Dibujar detalles de equipos
         player_top_left = [
             (50, 50),  # top left corner
-            (50, screen.get_width() - 300),  # top right corner
+            (50, screen_rect.width - 300),  # top right corner
         ]
         for i in range(0, PLAYER_COUNT, +1):
             (top, left) = player_top_left[i]
@@ -720,6 +795,30 @@ class Expedition(Scene):
                     if cell > 0:
                         color = "red" if cell > 5 else "blue" if cell > 0 else "black"
                         pygame.draw.rect(screen, color, (j * 32 +50, i * 32+400, 32, 32))
+        
+        # Dibujar partida ganada
+        if self.state.is_current(STATE_WIN):
+            congrats_text = self.text_congratulations_to_team[self.turn]
+            screen.blit(self.img_dark_overlay, (0, 0))
+            screen.blit(self.img_end_big[1], (screen_rect.centerx - self.img_end_big[1].get_width() // 2, screen_rect.centery - self.img_end_big[1].get_height() // 2))
+            screen.blit(self.img_end_big[0], (screen_rect.centerx - self.img_end_big[0].get_width() // 2, screen_rect.centery - self.img_end_big[0].get_height() // 2))
+            screen.blit(self.team_spaceship_img[self.turn], (screen_rect.centerx - self.img_end_big[0].get_width() // 2, screen_rect.centery + 80))
+            pygame.draw.rect(screen, "white", (screen_rect.centerx - congrats_text.get_width() // 2 - 10, screen_rect.centery - self.img_end_big[0].get_height() // 2 - 5, congrats_text.get_width() + 20, 32), border_radius=10)
+            screen.blit(congrats_text, (screen_rect.centerx - congrats_text.get_width() // 2, screen_rect.centery - self.img_end_big[0].get_height() // 2))
+
+        # Dibujar empate
+        if self.state.is_current(STATE_TIES):
+            screen.blit(self.img_dark_overlay, (0, 0))
+            screen.blit(self.img_ties, (screen_rect.centerx - self.img_ties.get_width() // 2, screen_rect.centery - self.img_ties.get_height() // 2))
+            pygame.draw.rect(screen, "white", (screen_rect.centerx - self.text_ties.get_width() // 2 - 10, screen_rect.centery - self.img_ties.get_height() // 2 - 54, self.text_ties.get_width() + 20, 32), border_radius=10)
+            screen.blit(self.text_ties, (screen_rect.centerx - self.text_ties.get_width() // 2, screen_rect.centery - self.img_ties.get_height() // 2 - 50))
+
+        # Dibujar indicador de estado
+        state_text = self.text_state[self.state.current_state]
+        state_text_box_width = state_text.get_width() + 50 * 2
+        pygame.draw.rect(screen, "white", (screen_rect.centerx - state_text_box_width // 2, screen_rect.height - 32, state_text_box_width, 32), border_top_left_radius=10, border_top_right_radius=10)
+        screen.blit(state_text, (screen_rect.centerx - state_text.get_width() // 2, screen_rect.height - state_text.get_height()))
+
 
     def exit(self, context: GameContext):
         # Detener música

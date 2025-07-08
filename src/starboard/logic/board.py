@@ -156,6 +156,9 @@ def is_cell_obstacle_at(board: Board, pos: BoardCoords):
     cell = cell_at(board, pos)
     return cell[1] >= CELL_OBSTACLE_DEBRIS and cell[1] <= CELL_OBSTACLE_SOLAR_RAD
 
+def is_cell_end_at(board: Board, pos: BoardCoords):
+    return cell_at(board, pos)[1] == CELL_END
+
 def is_cell_empty_at(board: Board, pos: BoardCoords):
     return cell_at(board, pos)[1] == CELL_SPACE
 

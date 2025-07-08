@@ -21,7 +21,7 @@ class MainMenu(Scene):
             dim=(200,50),
             inactive_color=resources.colors.GREEN,
             active_color=resources.colors.BRIGHT_GREEN,
-            text='Hola',
+            text='Jugar',
             action=lambda: context.scene.change(SCENE_GAME_CONFIG),
             font=self.font)
         self.button_registro = Button(
