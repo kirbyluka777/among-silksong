@@ -13,28 +13,22 @@ BOX_HEIGHT = 32
 class BestStats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-<<<<<<< HEAD
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
-=======
         self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
         self.report_font = pygame.font.SysFont("Courier New", 18)
         self.not_found_text = self.font.render("País no encontrado", True, "white")
         self.no_data_text = self.font.render("No hay datos para este país", True, "white")
->>>>>>> 04a20810933a89cc6c8a374df966e05e9bf510d5
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 
     def start(self, context: GameContext):
-<<<<<<< HEAD
-        screen = context.get_screen()    
-        pygame.mixer.music.play(-1)
-=======
         screen = context.get_screen()
+        pygame.mixer.music.play(-1)
         self.interface = InterfaceController(context)
         self.search_tried = False
         self.show_data = False
         self.report_text = None
->>>>>>> a93e45fea041e00c03e2cd6e00ee64323eaeeec8
         self.text = Text(
             context,
             text="Ingrese el codigo de un pais para ver su mejor recorrido",
@@ -66,20 +60,11 @@ class BestStats(Scene):
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Buscar',
-<<<<<<< HEAD
-<<<<<<< HEAD
-            action=self.id_input(),
-            font=self.font,
+            action=lambda: self.search(self.input_id.text),
             sound_sel=self.button_sound_sel,
             sound_press=self.button_sound_pressed,
+            font=self.font,
             flag=True)
-=======
-            action=self.search(self.input_id.text),
-=======
-            action=lambda: self.search(self.input_id.text),
->>>>>>> 04a20810933a89cc6c8a374df966e05e9bf510d5
-            font=self.font)
->>>>>>> a93e45fea041e00c03e2cd6e00ee64323eaeeec8
 
     def update(self, context: GameContext):
         self.input_id.update()

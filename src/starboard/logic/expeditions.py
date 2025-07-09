@@ -21,14 +21,14 @@ def save_expedition(name1,name2,en_unit,difficulty,direction):
     exp_id = records.increment_records_len(EXPEDITION_FILE)
     date = datetime.datetime.now().strftime(f"%Y/%m/%d")
 
+    file = open(EXPEDITION_FILE,'ab')
     name1 = name1.ljust(20).encode('utf-8')
     name2 = name2.ljust(20).encode('utf-8')
-    date = date.ljust(8).encode('utf-8')
-    file.write(struct.pack(EXPEDITION_FORMAT,EXP_ID,name1,name2,en_unit,difficulty,direction,date))
-    EXP_ID = EXP_ID+1
+    date = date.ljust(10).encode('utf-8')
+    file.write(struct.pack(EXPEDITION_FORMAT,exp_id,name1,name2,en_unit,difficulty,direction,date))
     file.close()
 
-    return EXP_ID
+    return exp_id
 
 def read_expeditions() -> list[Expedition]:
     if not os.path.isfile(EXPEDITION_FILE):
