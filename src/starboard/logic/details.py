@@ -63,12 +63,13 @@ def read_details(id):
             bytes = file.read(DETAILS_MOVE_SIZE)
             player_id, steps, index = struct.unpack(DETAILS_MOVE_FORMAT, bytes)
             details[i] = MoveEvent(player_id, steps, index)
+            i += 1
         elif e == EVENT_CELL_VISIT:
             bytes = file.read(DETAILS_CELL_VISIT_SIZE)
             player_id, cell_type, consequence = struct.unpack(DETAILS_CELL_VISIT_FORMAT, bytes)
             consequence = consequence.decode('utf-8').strip('\x00')
             details[i] = CellVisitEvent(player_id, cell_type, consequence)
-        i += 1
+            i += 1
 
 def get_total_km_from_expedition(expedition_id, turn):
     km = 0

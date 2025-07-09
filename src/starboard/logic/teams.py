@@ -3,16 +3,17 @@ import os
 import struct
         
 TEAM_FILE = 'data\\equipos.bin'
-TEAM_FORMAT = 'i20s50s8s3s'
+TEAM_FORMAT = 'i20s50s8s3si'
 TEAM_SIZE = struct.calcsize(TEAM_FORMAT)
 
 class Team:
-    def __init__(self, id, name, email, password, country_code):#, country, ods
+    def __init__(self, id, name, email, password, country_code, ods):#, country, ods
         self.id = id
         self.name = name # 20 caracteres
         self.email = email # 
         self.password = password
         self.country_code = country_code
+        self.ods = ods
 
 def save_record(data:Team):
     file = open(TEAM_FILE, 'ab')
@@ -22,8 +23,9 @@ def save_record(data:Team):
     email = data.email.encode('utf-8')
     password = data.password.encode('utf-8')
     country_code = data.country_code.encode('utf-8')
+    ods = data.ods
 
-    packed_data = struct.pack(TEAM_FORMAT, id, name, email, password, country_code)
+    packed_data = struct.pack(TEAM_FORMAT, id, name, email, password, country_code, ods)
 
     file.write(packed_data)
 
@@ -42,13 +44,13 @@ def load_records() -> list[Team]:
         if not bytes:
             file.close()
             return equipos
-        id, name, email, password, country_code = struct.unpack(TEAM_FORMAT, bytes)
+        id, name, email, password, country_code, ods = struct.unpack(TEAM_FORMAT, bytes)
         name = name.decode('utf-8').strip('\x00')
         email = email.decode('utf-8').strip('\x00')
         password = password.decode('utf-8').strip('\x00')
         country_code = country_code.decode('utf-8').strip('\x00')
 
-        equipos[i] = Team(id, name, email, password, country_code)
+        equipos[i] = Team(id, name, email, password, country_code, ods)
         i += 1
 
 def XOR_Encrypt(text, key):
@@ -116,7 +118,7 @@ def search_team(id):
 
     bytes = file.read(TEAM_SIZE)
 
-    id, name, email, password, country = struct.unpack(TEAM_FORMAT, bytes)
+    id, name, email, password, country, ods = struct.unpack(TEAM_FORMAT, bytes)
 
     name = name.decode('utf-8').strip('\x00')
     email = email.decode('utf-8').strip('\x00')
@@ -124,7 +126,7 @@ def search_team(id):
     country = country.decode('utf-8').strip('\x00')
 
     file.close()
-    return Team(id,name,email,password,country)
+    return Team(id,name,email,password,country, ods)
 
 def team_name_exists(team_name):
     if not os.path.isfile(TEAM_FILE):
@@ -136,7 +138,7 @@ def team_name_exists(team_name):
     while True:
         bytes = file.read(TEAM_SIZE)
         if not bytes: return False
-        id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+        id, name, email, password, ods = struct.unpack(TEAM_FORMAT, bytes)
         name = name.decode('utf-8').strip('\x00')
         if team_name == name:
             return True

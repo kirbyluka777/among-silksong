@@ -57,10 +57,7 @@ class Expedition(Scene):
             pygame.image.load(resources.images.SUS_1),
             pygame.image.load(resources.images.SUS_2)
         ]
-        self.teams = [
-            Team("Estados Unidos", "administration@gov.us", "XXX"),
-            Team("Rusia", "administration@gov.ru", "XXX")
-        ]
+        self.teams = [globals.team1, globals.team2]
         for i in range(0, len(self.team_pfp)):
             self.team_pfp[i] = pygame.transform.scale(self.team_pfp[i], (64, 64))
         

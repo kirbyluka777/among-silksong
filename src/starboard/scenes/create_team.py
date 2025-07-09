@@ -1,5 +1,5 @@
 from engine import *
-from engine.controllers.ui import Button, InputBox
+from engine.controllers.ui import Button, InputBox, DropDown
 from ..constants import *
 from .. import resources
 from .. import globals
@@ -65,6 +65,24 @@ class CreateTeam(Scene):
             self.input_password
         ]
 
+        # crear lista
+        self.sel_ods = None
+        self.dropdown_ods = DropDown(context,
+                                     ['#696969', '#ffffff'],
+                                     ['#696969', '#ffffff'],
+                                     400, 80,350,32,
+                                     pygame.font.Font(resources.fonts.BEACH_BALL, 18),
+                                     'ODS',
+                                     list(m for n,m in enumerate(globals.ods)))
+        self.sel_country = None
+        self.dropdown_country = DropDown(context,
+                                     ['#696969', '#ffffff'],
+                                     ['#696969', '#ffffff'],
+                                     800,80,120,30,
+                                     self.font,
+                                     'Pais',
+                                     list(c.name for c in globals.countries))
+
         self.warnings = ["La contraseña debe tener entre 6 y 10 caracteres",
                          "La contraseña solo puede tener *,-,_,#.",
                          "La contraseña debe tener números",
@@ -83,6 +101,14 @@ class CreateTeam(Scene):
     def update(self, context: GameContext):
         for box in self.input_boxes:
             box.update()
+        index = self.dropdown_ods.update()
+        if index >= 0:
+            self.sel_ods = index
+            self.dropdown_ods.main = self.dropdown_ods.options[index]
+        index = self.dropdown_country.update()
+        if index >= 0:
+            self.sel_country = globals.countries[index]
+            self.dropdown_country.main = self.dropdown_country.options[index]
         self.button_back.update()
         self.button_registrar.update()
         self.verificacion()
@@ -93,6 +119,8 @@ class CreateTeam(Scene):
         screen.blit(self.img_bg,(0,0))
         for box in self.input_boxes:
             box.draw(screen)
+        self.dropdown_ods.draw(screen)
+        self.dropdown_country.draw(screen)
         self.button_back.draw(screen)
         self.button_registrar.draw(screen)
         for i,j in enumerate(self.warning_flags):
@@ -117,9 +145,9 @@ class CreateTeam(Scene):
         email  = self.input_email.text
         password = self.input_password.text
 
-        if name and email and password and not any(self.warning_flags):
+        if name and email and password and self.sel_country and self.sel_ods and not any(self.warning_flags):
             team_id = increment_records_len(TEAM_FILE)
-            new_team = Team(team_id, name, email.strip(), password.strip(), 'RUS')
+            new_team = Team(team_id, name, email.strip(), password.strip(), self.sel_country.name, self.sel_ods)
             globals.teams.append(new_team)
             teams.save_record(new_team)
             print(f'registrado: {new_team.name}\n'

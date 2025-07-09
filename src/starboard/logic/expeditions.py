@@ -22,9 +22,9 @@ def save_expedition(name1,name2,en_unit,difficulty,direction):
     date = datetime.datetime.now().strftime(f"%Y/%m/%d")
 
     file = open(EXPEDITION_FILE,'ab')
-    name1 = name1.ljust(20).encode('utf-8')
-    name2 = name2.ljust(20).encode('utf-8')
-    date = date.ljust(10).encode('utf-8')
+    name1 = name1.ljust(20).strip().encode('utf-8')
+    name2 = name2.ljust(20).strip().encode('utf-8')
+    date = date.ljust(10).strip().encode('utf-8')
     file.write(struct.pack(EXPEDITION_FORMAT,exp_id,name1,name2,en_unit,difficulty,direction,date))
     file.close()
 

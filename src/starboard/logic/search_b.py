@@ -8,6 +8,7 @@ from . import details
 from . import expeditions
 from .expeditions import Expedition
 from . import records
+from .. import globals
 
 def search_b(team_id) -> bool:
     team = teams.search_team(team_id)
@@ -40,12 +41,12 @@ def search_b(team_id) -> bool:
     file = open('Reporte_b.txt', 'w')
     file.write(f"REPORTE: EQUIPO {team.name} Y EXPEDICIONES EN LAS QUE HA PARTICIPADO\n"
                f"----------------------------------------------\n"
-               f"DATOS DE EQUIPO\nID:\t{team.id}\nNOMBRE:\t{team.name}\nCORREO:\t{team.email}\n"
+               f"DATOS DE EQUIPO\nID:\t{team.id}\nNOMBRE:\t{team.name}\nCORREO:\t{team.email}\nODS\t{globals.ods[team.ods]}\n"
                f"----------------------------------------------\n"
                f"EXPEDICIONES\n")
     km_total = 0
     for x in range(i):
-        km_total += details.get_total_km_from_expedition(exp[x].id)
+        km_total += details.get_total_km_from_expedition(exp[x].id,team_id)
         print(km_total)
         file.write(f"FECHA\t{exp[x].date}\n"
                    f"ID\t{exp[x].id}\n"
