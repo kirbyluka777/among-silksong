@@ -5,6 +5,8 @@ from .. import resources
 from .. import globals
 from ..logic import teams
 from ..logic.teams import Team
+from ..logic.teams import TEAM_FILE
+from ..logic.records import increment_records_len
 
 BOX_WIDTH = 140
 BOX_HEIGHT = 32
@@ -72,11 +74,27 @@ class CreateTeam(Scene):
             self.input_password
         ]
 
+        self.warnings = ["La contraseña debe tener entre 6 y 10 caracteres",
+                         "La contraseña solo puede tener *,-,_,#.",
+                         "La contraseña debe tener números",
+                         "La contraseña debe tener letras minúsculas",
+                         "La contraseña debe tener letras mayúsculas",
+                         "La contraseña posee 3 caracteres repetidos de manera secuencial"]
+        self.warning_flags = [False for _ in range(6)]
+
+        self.warnings_text = [self.font.render(self.warnings[0], True, '#ffffff'),
+                              self.font.render(self.warnings[1], True, '#ffffff'),
+                              self.font.render(self.warnings[2], True, '#ffffff'),
+                              self.font.render(self.warnings[3], True, '#ffffff'),
+                              self.font.render(self.warnings[4], True, '#ffffff'),
+                              self.font.render(self.warnings[5], True, '#ffffff')]
+
     def update(self, context: GameContext):
         for box in self.input_boxes:
             box.update()
         self.button_back.update()
         self.button_registrar.update()
+        self.verificacion()
     
     def draw(self, context: GameContext):
         screen = context.get_screen()
@@ -86,24 +104,38 @@ class CreateTeam(Scene):
             box.draw(screen)
         self.button_back.draw(screen)
         self.button_registrar.draw(screen)
+        for i,j in enumerate(self.warning_flags):
+            if j:
+                screen.blit(self.warnings_text[i], (400, 100 + 30*i))
             
     def exit(self, context: GameContext):
         pygame.mixer.music.stop()
         pass
+
+    def verificacion(self):
+        password = self.input_password.text
+        
+        self.warning_flags[0] = len(password) < 6 or len(password) > 10
+        self.warning_flags[1] = not teams.allowed_chars(password, "*=_#")
+        self.warning_flags[2] = not teams.contain_number(password)
+        self.warning_flags[3] = not teams.contain_lowercase(password)
+        self.warning_flags[4] = not teams.contain_uppercase(password)
+        self.warning_flags[5] = teams.repeat_3(password)
 
     def register_team(self):
         name = self.input_name.text
         email  = self.input_email.text
         password = self.input_password.text
 
-        if name and email and password:
-            password=teams.verification(password)
-            new_team = Team(name,email,password)
+        if name and email and password and not any(self.warning_flags):
+            team_id = increment_records_len(TEAM_FILE)
+            new_team = Team(team_id.strip(),name,email.strip(),password.strip(), 'RUS')
             globals.teams.append(new_team)
             teams.save_record(new_team)
             print(f'registrado: {new_team.name}\n'
                   f'correo: {new_team.email}\n'
-                  f'contrasena: {new_team.password}')
+                  f'contrasena: {new_team.password}\'n'
+                  f'pais: {new_team.country_code}')
             self.input_name.text = self.input_email.text = self.input_password.text = ''
             for box in self.input_boxes:
                 box.txt_surface = pygame.font.SysFont(None, 32).render(box.text, True, box.color)

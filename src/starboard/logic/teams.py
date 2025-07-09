@@ -1,41 +1,53 @@
 import os
 import struct
+from . import records
         
-TEAM_FILE = 'equipos.bin'
-TEAM_FORMAT = '20s50s8s'
+TEAM_FILE = 'data\\equipos.bin'
+TEAM_FORMAT = 'i20s50s8s3s'
 TEAM_SIZE = struct.calcsize(TEAM_FORMAT)
 
 class Team:
-    def __init__(self, name, email, password):#, country, ods
+    def __init__(self, id, name, email, password, country_code):#, country, ods
+        self.id = id
         self.name = name # 20 caracteres
         self.email = email # 
         self.password = password
+        self.country_code = country_code
 
 def save_record(data:Team):
-    with open(TEAM_FILE, 'ab') as file:
-        name = data.name.encode('utf-8')
-        email = data.email.encode('utf-8')
-        password = data.password.encode('utf-8')
+    file = open(TEAM_FILE, 'ab')
 
-        packed_data = struct.pack(TEAM_FORMAT, name, email, password)
+    id = data.id
+    name = data.name.encode('utf-8')
+    email = data.email.encode('utf-8')
+    password = data.password.encode('utf-8')
+    country_code = data.country_code.encode('utf-8')
 
-        file.write(packed_data)
+    packed_data = struct.pack(TEAM_FORMAT, id, name, email, password, country_code)
 
-def load_records(game):
+    file.write(packed_data)
+
+    file.close()
+
+def load_records() -> list[Team]:
     if not os.path.isfile(TEAM_FILE):
         return []
-    results = []
-    with open(TEAM_FILE, 'rb') as file:
-        while True:
-            bytes = file.read(TEAM_SIZE)
-            if not bytes:
-                return results
-            name, email, password = struct.unpack(TEAM_FORMAT, bytes)
-            name = name.decode('utf-8').strip('\x00')
-            email = email.decode('utf-8').strip('\x00')
-            password = password.decode('utf-8').strip('\x00')
+    teams_len = records.get_records_len(TEAM_FILE)
+    equipos = [None for _ in teams_len]
+    i = 0
+    file = open(TEAM_FILE, 'rb')
+    while True:
+        bytes = file.read(TEAM_SIZE)
+        if not bytes:
+            file.close()
+            return equipos
+        id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+        name = name.decode('utf-8').strip('\x00')
+        email = email.decode('utf-8').strip('\x00')
+        password = password.decode('utf-8').strip('\x00')
+        country_code = password.decode('utf-8').strip('\x00')
 
-            results.append(Team(name, email, password))
+        equipos[i] = Team(id, name, email, password, country_code)
 
 def XOR_Encrypt(text, key):
     return ' '.join(str(ord(c) ^ int(key)) for c in text)
@@ -88,46 +100,41 @@ def repeat_3(password):
             return True
     return False
 
-def verification(password):
-    error = True
-    while error:
-        error = False
+def search_team(id):
+    if not os.path.isfile(TEAM_FILE):
+        return None
+    teams_len = records.get_records_len(TEAM_FILE)
+    if id < 0 or id > teams_len:
+        print("id < 0 or id > max len")
+        return None
+    
+    file = open(TEAM_FILE, 'rb')
 
-        # Longitud
-        while len(password) < 6 or len(password) > 10:
-            print("Su contraseña debe tener entre 6 y 10 caracteres")
-            password = input("Ingrese una nueva contraseña: ")
-            error = True
+    file.seek(4 + TEAM_SIZE*(id-1))
 
-        # Caracteres válidos
-        while not allowed_chars(password, "*=_#"):
-            print("Su contraseña posee caracteres inválidos.")
-            password = input("Ingrese una nueva contraseña: ")
-            error = True
+    bytes = file.read(TEAM_SIZE)
 
-        # Números
-        if not contain_number(password):
-            print("A su contraseña le faltan números")
-            password = input("Ingrese una nueva contraseña: ")
-            error = True
+    id, name, email, password, country = struct.unpack(TEAM_FORMAT, bytes)
 
-        # Letras minúsculas
-        if not contain_lowercase(password):
-            print("A su contraseña le faltan letras minúsculas")
-            password = input("Ingrese una nueva contraseña: ")
-            error = True
+    name = name.decode('utf-8').strip('\x00')
+    email = email.decode('utf-8').strip('\x00')
+    password = password.decode('utf-8').strip('\x00')
+    country = country.decode('utf-8').strip('\x00')
 
-        # Letras mayúsculas
-        if not contain_uppercase(password):
-            print("A su contraseña le faltan letras mayúsculas")
-            password = input("Ingrese una nueva contraseña: ")
-            error = True
+    file.close()
+    return Team(id,name,email,password,country)
 
-        # Repetición de 3 caracteres
-        if repeat_3(password):
-            print("La contraseña posee 3 caracteres repetidos de manera secuencial")
-            password = input("Ingrese una nueva contraseña: ")
-            error = True
+def team_name_exists(team_name):
+    if not os.path.isfile(TEAM_FILE):
+        return False
+    
+    file = open(TEAM_FILE, 'rb')
 
-    print("Contraseña válida")
-    return password
+    file.seek(4)
+    while True:
+        bytes = file.read(TEAM_SIZE)
+        if not bytes: return False
+        id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+        name = name.decode('utf-8').strip('\x00')
+        if team_name == name:
+            return True

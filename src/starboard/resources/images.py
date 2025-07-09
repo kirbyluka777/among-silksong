@@ -1,5 +1,8 @@
 from engine.resources.resolution import image
 
+UCAB_LOGO = image("ucab_logo.jpg")
+PYGAME_LOGO = image("pygame_logo.png")
+
 COCONUT = image("coconut.jpg")
 SPACESHIP = image("spaceship.png")
 BLUE_BG = image("blue_bg.png")

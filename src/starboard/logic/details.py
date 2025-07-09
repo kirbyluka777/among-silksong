@@ -1,7 +1,8 @@
 import os
 import struct
+from . import records
 
-DETAILS_FILE = 'detalles_{0}.bin'
+DETAILS_FILE = 'data\\detalles_{0}.bin'
 DETAILS_MOVE_FORMAT = 'iii' # Codigo de jugador, Pasos, Indice
 DETAILS_MOVE_SIZE = struct.calcsize(DETAILS_MOVE_FORMAT)
 DETAILS_CELL_VISIT_FORMAT = 'ii50s'
@@ -31,6 +32,7 @@ def save_details(
         cell_type:int=None,
         consequence:str=None):
     filename = DETAILS_FILE.format(id)
+    records.increment_records_len(filename)
     file = open(filename, 'ab')
     bytes = struct.pack('i', event_type)
     file.write(bytes)
@@ -45,24 +47,34 @@ def save_details(
 def read_details(id):
     filename = DETAILS_FILE.format(id)
     if not os.path.isfile(filename):
-        return
+        return []
+    details_len = records.get_records_len(filename)
+    details = [None for _ in range(details_len)]
+    i = 0
+
     file = open(filename, 'rb')
     while True:
         bytes = file.read(4)
         if not bytes:
             file.close()
-            return
-        e = struct.unpack('i', bytes)
+            return details
+        e, = struct.unpack('i', bytes)
         if e == EVENT_MOVE:
             bytes = file.read(DETAILS_MOVE_SIZE)
             player_id, steps, index = struct.unpack(DETAILS_MOVE_FORMAT, bytes)
-            yield MoveEvent(player_id, steps, index)
+            details[i] = MoveEvent(player_id, steps, index)
         elif e == EVENT_CELL_VISIT:
             bytes = file.read(DETAILS_CELL_VISIT_SIZE)
             player_id, cell_type, consequence = struct.unpack(DETAILS_CELL_VISIT_FORMAT, bytes)
             consequence = consequence.decode('utf-8').strip('\x00')
-            yield CellVisitEvent(player_id, cell_type, consequence)
+            details[i] = CellVisitEvent(player_id, cell_type, consequence)
 
+def get_total_km_from_expedition(expedition_id):
+    km = 0
+    for detail in read_details(expedition_id):
+        if isinstance(detail, MoveEvent):
+            km = detail.steps
+    return km
 
 if __name__=="__main__":
     sex = read_details(2)

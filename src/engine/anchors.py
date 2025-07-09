@@ -1,6 +1,5 @@
 from pygame import Vector2
 
-
 center = Vector2(0.5, 0.5)
 topcenter = Vector2(0.5, 0)
 bottomcenter = Vector2(0.5, 1)
