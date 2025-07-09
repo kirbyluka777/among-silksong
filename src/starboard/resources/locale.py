@@ -65,3 +65,28 @@ STATE_END_OF_TURN_MSG = "Fin de turno!"
 STATE_MINIGAME_MSG = "Es hora de jugar!"
 STATE_WIN_MSG = "Tenemos un ganador!"
 STATE_TIES_MSG = "Será para la próxima..."
+
+INTRO_MSG = [
+    "Dos equipos, conformados por varios astronautas,\n"
+    "compiten en un viaje a través de un sistema solar\n"
+    "lleno de planetas y lunas, con el propósito de\n"
+    "conquistar un planeta habitable donde se encuentra\n"
+    "el equilibrio del sistema solar.",
+    "En dicho planeta existen los recursos y las condiciones\n"
+    "ambientales ideales para la vida. No obstante...",
+    "Debido a recientes eventos cosmicos, el planeta has sido victima\n"
+    "de catastrofes que contaminaron la atmosfera con radiación.",
+    "Nuestro nuevo planeta necesitará un proceso de ingeniería\n"
+    "extraordinario de descontaminación para recuperarlo y\n"
+    "así poder habitarlo.",
+    "Los equipos aeroespaciales más capaces de la tierra irán\n"
+    "a una misión para poder recuperar el planeta.",
+    "Durante el recorrido, para llegar al planeta a conquistar,\n"
+    "se encontrarán con una serie de obstáculos espaciales que\n"
+    "les dificultarán la llegada.",
+    "Así como también contarán con algunas estaciones espaciales,\n"
+    "que proveerán los recursosque les permita avanzar en el recorrido.",
+    "Quien llegue primero al destino,\n"
+    "conquistará al nuevo planeta.",
+    "Esta es la leyenda de...",
+]
