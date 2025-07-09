@@ -6,7 +6,6 @@ import os
 EXPEDITION_FILE = 'data\\EXPEDICIONES_ESPACIALES.bin'
 EXPEDITION_FORMAT = "i20s20siii8s"
 EXPEDITION_SIZE = struct.calcsize(EXPEDITION_FORMAT)
-EXP_ID = 1
 
 class Expedition:
     def __init__(self, id, team_name_1, team_name_2, board_size, difficulty, board_dir, date):
@@ -19,12 +18,12 @@ class Expedition:
         self.date = date
 
 def save_expedition(name1,name2,en_unit,difficulty,direction):
-    global EXP_ID
-    date = datetime.datetime.now().strftime("%Y/%m/%d")
+    if not os.path.isfile(EXPEDITION_FILE):
+        exp_id = 1
+    else:
+        exp_id = records.increment_records_len(EXPEDITION_FILE)
+    date = datetime.datetime.now().strftime(f"%Y/%m/%d")
 
-    records.increment_records_len(EXPEDITION_FILE)
-
-    file = open(EXPEDITION_FILE,'ab')
     name1 = name1.ljust(20).encode('utf-8')
     name2 = name2.ljust(20).encode('utf-8')
     date = date.ljust(8).encode('utf-8')

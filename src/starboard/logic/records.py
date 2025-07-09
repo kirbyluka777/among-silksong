@@ -9,7 +9,7 @@ def get_records_len(filename):
     records_len, = struct.unpack("i", records_len_bytes)
     return records_len
 
-def increment_records_len(filename):
+def increment_records_len(filename) -> int:
     # Si el archivo no existe, inicializarlo con una cantidad de 1
     if not os.path.isfile(filename):
         file = open(filename, 'wb')
@@ -31,7 +31,7 @@ def increment_records_len(filename):
 
         # Guardar nueva cantidad
         file.seek(0)
-        records_len_bytes = struct.pack("i", new_records_len)
+        records_len_bytes, = struct.pack("i", new_records_len)
         file.write(records_len_bytes)
 
         # cerramos archivo

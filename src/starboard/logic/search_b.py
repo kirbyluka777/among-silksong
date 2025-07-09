@@ -34,7 +34,7 @@ def search_b(team_id) -> bool:
             name2 = name2.decode('utf-8').strip('\x00')
             date = date.decode('utf-8').strip('\x00')
 
-            if team.name.strip() == name1.strip() or team.name.strip() == name2.strip():
+            if team.name == name1 or team.name == name2:
                 exp[i] = Expedition(id, name1, name2, en_unit, difficulty, direction, date)
                 i+=1
     file = open('Reporte_b.txt', 'w')
