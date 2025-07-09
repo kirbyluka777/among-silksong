@@ -48,16 +48,11 @@ class TeamStats(Scene):
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Buscar',
-<<<<<<< HEAD
-            action=self.id_input(),
+            action=self.id_input,
             font=self.font,
             sound_sel=self.button_sound_sel,
             sound_press=self.button_sound_pressed,
             flag=True)
-=======
-            action=self.id_input,
-            font=self.font)
->>>>>>> a93e45fea041e00c03e2cd6e00ee64323eaeeec8
 
     def update(self, context: GameContext):
         self.input_id.update()
