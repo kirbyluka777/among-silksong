@@ -4,7 +4,7 @@ import datetime
 import os
 
 EXPEDITION_FILE = 'data\\EXPEDICIONES_ESPACIALES.bin'
-EXPEDITION_FORMAT = "i20s20siii8s"
+EXPEDITION_FORMAT = "i20s20siii10s"
 EXPEDITION_SIZE = struct.calcsize(EXPEDITION_FORMAT)
 
 class Expedition:

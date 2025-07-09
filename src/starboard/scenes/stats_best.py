@@ -14,6 +14,7 @@ class BestStats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
         self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+        self.report_font = pygame.font.SysFont("Courier New", 18)
         self.not_found_text = self.font.render("País no encontrado", True, "white")
         self.no_data_text = self.font.render("No hay datos para este país", True, "white")
 
@@ -114,7 +115,7 @@ class BestStats(Scene):
                     longest_str = f"{longest} km"
                     report += f"{team.name:<20} | {longest_str:>12} | {expedition_detail}\n"
 
-        self.report_text = [self.font.render(line, True, "white") for line in report.split("\n")] if report else []
+        self.report_text = [self.report_font.render(line, True, "white") for line in report.split("\n")] if report else []
 
 def get_expedition_detail_as_str(expedition: expeditions.Expedition):
     dir = "Horario" if expedition.board_dir == BOARD_DIR_OCLOCK else "Antihorario"
