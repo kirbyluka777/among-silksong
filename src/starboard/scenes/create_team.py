@@ -13,6 +13,7 @@ BOX_HEIGHT = 32
 
 class CreateTeam(Scene):
     def load(self, context: GameContext):
+        self.toggle_xor = False
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
         self.font = pygame.font.Font(resources.fonts.COINY, 24)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
@@ -23,6 +24,18 @@ class CreateTeam(Scene):
         pygame.mixer.music.load(resources.music.REGISTER_THEME)
         pygame.mixer.music.play(-1)
         # Crear botones
+        self.button_xor = Button(
+            context,
+            pos=(100,340), 
+            dim=(140,32),
+            inactive_color="white",
+            active_color=resources.colors.RED,
+            text='No encriptar',
+            action=self.xor_toggle,
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_back = Button(
             context,
             pos=(100,screen.get_height() - 100), 
@@ -87,7 +100,7 @@ class CreateTeam(Scene):
         self.dropdown_country = DropDown(context,
                                      ['#696969', '#ffffff'],
                                      ['#696969', '#ffffff'],
-                                     800,80,120,30,
+                                     800,80,200,30,
                                      self.font,
                                      'Pais',
                                      list(c.name for c in globals.countries))
@@ -121,6 +134,7 @@ class CreateTeam(Scene):
         self.button_back.update()
         self.button_registrar.update()
         self.verificacion()
+        self.button_xor.update()
     
     def draw(self, context: GameContext):
         screen = context.get_screen()
@@ -128,17 +142,23 @@ class CreateTeam(Scene):
         screen.blit(self.img_bg,(0,0))
         for box in self.input_boxes:
             box.draw(screen)
-        self.dropdown_ods.draw(screen)
-        self.dropdown_country.draw(screen)
+        self.button_xor.draw(screen)
         self.button_back.draw(screen)
         self.button_registrar.draw(screen)
         for i,j in enumerate(self.warning_flags):
             if j:
-                screen.blit(self.warnings_text[i], (400, 100 + 30*i))
+                screen.blit(self.warnings_text[i], (100, 400 + 30*i))
+        self.dropdown_ods.draw(screen)
+        self.dropdown_country.draw(screen)
             
     def exit(self, context: GameContext):
         pygame.mixer.music.stop()
         pass
+
+    def xor_toggle(self):
+        self.toggle_xor = not self.toggle_xor
+        self.button_xor.text = 'Encriptar' if self.toggle_xor else 'No encriptar'
+        print(self.toggle_xor)
 
     def verificacion(self):
         password = self.input_password.text
@@ -156,6 +176,9 @@ class CreateTeam(Scene):
         password = self.input_password.text
 
         if name and email and password and self.sel_country and self.sel_ods is not None and not any(self.warning_flags):
+            if self.toggle_xor:
+                password = teams.XOR_Encrypt(password) # lo intentamos
+                print(password)
             team_id = increment_records_len(TEAM_FILE)
             new_team = Team(team_id, name, email.strip(), password.strip(), self.sel_country.code.strip(), self.sel_ods)
             globals.teams.append(new_team)

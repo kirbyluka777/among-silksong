@@ -53,10 +53,10 @@ def load_records() -> list[Team]:
         equipos[i] = Team(id, name, email, password, country_code, ods)
         i += 1
 
-def XOR_Encrypt(text, key):
+def XOR_Encrypt(text, key=5):
     return ' '.join(str(ord(c) ^ int(key)) for c in text)
 
-def XOR_Decrypt(encrypted_text, key):
+def XOR_Decrypt(encrypted_text, key=5):
     return ''.join(chr(int(num) ^ int(key)) for num in encrypted_text.split())
 
 #por cada caracter lo convierte a su codigo ascii, aplica la operacion XoR (comparar sus binarios para generar otro numero en binario) con el "^" con la clave,convierte ese numero en un caracter y lo va pegando
