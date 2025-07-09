@@ -9,3 +9,4 @@ from .create_team import CreateTeam
 from .stats import Stats
 from .stats_best import BestStats
 from .stats_team import TeamStats
+from .stats_top10 import Top10Stats

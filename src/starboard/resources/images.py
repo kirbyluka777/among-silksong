@@ -7,6 +7,7 @@ COCONUT = image("coconut.jpg")
 SPACESHIP = image("spaceship.png")
 BLUE_BG = image("blue_bg.png")
 MENU_BG = image("sussy baka.png")
+DIFFICULTY_BG = image("sel_difficulty.jpg")
 CELL_DOT_BLUE = image("cell_dot_blue.png")
 TIES = image("ties.png")
 WIP = image("wip.png")
@@ -41,3 +42,5 @@ CELL_OBSTACLE_SOLAR_RAD = image("cell/obstacle/solar_rad.png")
 
 KEY_ICON_Z = image("keys/Z.png")
 KEY_ICON_M = image("keys/M.png")
+
+ODS_CARDS = [[image(f"ods/{i+1}.{j+1}.png") for j in range(3)] for i in range(17)]

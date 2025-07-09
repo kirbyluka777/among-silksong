@@ -8,8 +8,10 @@ from ..logic.teams import Team
 
 class GameConfig(Scene):
     def load(self, context):
-        self.bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.bg = pygame.image.load(resources.images.DIFFICULTY_BG)
+        self.font = pygame.font.Font(resources.fonts.COINY, 40)
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
         self.teams1 = DropDown(["#696969", "#ffffff"],["#696969","#ffffff"], 100, 100, 150, 40,pygame.font.SysFont(None,32),
                               "Equipo 1",
                               list(t.name for t in globals.teams))
@@ -18,8 +20,9 @@ class GameConfig(Scene):
                               list(t.name for t in globals.teams))
 
     def start(self, context):
+        pygame.mixer.music.load(resources.music.SETTING_DIFFICULTY)
+        pygame.mixer.music.play(-1)
         self.input = PlayerInput(context)
-        
         self.selected_team1 = 0
         self.selected_team2 = 0
         self.option_selected = 0
@@ -101,4 +104,5 @@ class GameConfig(Scene):
         screen.blit(self.text_dir, (screen.get_width() // 2 - self.text_dir.get_width() // 2, screen.get_height() // 3 + 100))
 
     def exit(self, context):
+        pygame.mixer.music.stop()
         pass

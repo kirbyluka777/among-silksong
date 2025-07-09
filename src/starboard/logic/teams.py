@@ -128,6 +128,12 @@ def search_team(id):
     file.close()
     return Team(id,name,email,password,country, ods)
 
+def search_team_by_name(name: str):
+    for team in load_records():
+        if team.name == name:
+            return team
+    return None
+
 def team_name_exists(team_name):
     if not os.path.isfile(TEAM_FILE):
         return False

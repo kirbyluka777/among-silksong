@@ -1,8 +1,0 @@
-REPORTE: EQUIPO Rusia Y EXPEDICIONES EN LAS QUE HA PARTICIPADO
-----------------------------------------------
-DATOS DE EQUIPO
-ID:	2
-NOMBRE:	Rusia
-CORREO:	asd
-----------------------------------------------
-EXPEDICIONES

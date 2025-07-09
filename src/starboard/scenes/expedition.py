@@ -2,11 +2,11 @@ import random
 from engine import *
 from ..constants import *
 from .. import resources
+from .. import globals 
 from ..inputs import PlayerInput
 from ..logic import board
-from ..menu.team import Team
-from .. import globals
-from..logic.items import Item
+from ..logic.teams import Team
+from ..logic.items import Item
 from ..logic import expeditions
 from ..logic import details
 
@@ -45,6 +45,10 @@ class Expedition(Scene):
         self.team_spaceship_img[TURN_PLAYER_TWO].fill("blue", special_flags=pygame.BLEND_ADD)
         self.blue_bg_img = pygame.image.load(resources.images.BLUE_BG)
         self.cell_dot_blue_img = pygame.image.load(resources.images.CELL_DOT_BLUE)
+        self.dice_roll_sound = pygame.mixer.Sound(resources.sounds.DICE_ROLLING)
+        self.dice_number_sound = pygame.mixer.Sound(resources.sounds.GOT_NUMBER)
+        self.move_action_sound = pygame.mixer.Sound(resources.sounds.MOVE_SOUND)
+
         self.dice = [
             pygame.image.load(resources.images.DICE_1),
             pygame.image.load(resources.images.DICE_2),
@@ -111,7 +115,10 @@ class Expedition(Scene):
         self.img_dark_overlay = pygame.Surface(screen_rect.size, pygame.SRCALPHA)
         self.img_dark_overlay.fill((0, 0, 0, 128))
 
-        self.menu_font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+        self.img_ods_cards = [[pygame.transform.scale(pygame.image.load(card), (400, 400)) for card in ods] for ods in resources.images.ODS_CARDS]
+
+        self.menu_font = pygame.font.Font(resources.fonts.COINY, 24)
+        self.basic_font = pygame.font.SysFont("Arial", 10)
 
         self.text_press = self.menu_font.render(resources.locale.PRESS, True, resources.colors.ui_text_primary)
 
@@ -192,6 +199,8 @@ class Expedition(Scene):
             self.menu_font.render(resources.locale.CELL_OBSTACLE_SOLAR_RAD_DESCRIPTION, True, resources.colors.ui_text_primary),
         ]
 
+        self.text_indices_basic = [self.basic_font.render(str(i + 1), True, "white") for i in range(globals.board_size**2)]
+
     def start(self, context: GameContext):
         # Crear controladores de lógica
         self.input = PlayerInput(context)
@@ -208,6 +217,8 @@ class Expedition(Scene):
         self.endgame_timer = TimerController(context)
 
         # Inicializar estado
+        pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
+        pygame.mixer.music.play(-1)
         self.board = board.generate_random_board(globals.board_size, globals.board_difficulty, globals.board_dir)
         self.option_selected = 0
         self.turn = None
@@ -224,14 +235,16 @@ class Expedition(Scene):
         self.immunity = [False for _ in range(PLAYER_COUNT)]
         self.disabled = [False for _ in range(PLAYER_COUNT)]
         self.draft_ready = [False for _ in range(PLAYER_COUNT)]
+        self.target_ods = None
         self.camera_pos = (0, 0)
 
         # Crear archivo de expedicion
-        self.expedition_id = expeditions.save_expedition(self.teams[TURN_PLAYER_ONE].name,
-                                    self.teams[TURN_PLAYER_TWO].name,
-                                    self.board.size,
-                                    self.board.difficulty,
-                                    self.board.dir)
+        self.expedition_id = expeditions.save_expedition(
+            self.teams[TURN_PLAYER_ONE].name,
+            self.teams[TURN_PLAYER_TWO].name,
+            self.initial_energy,
+            self.board.difficulty,
+            self.board.dir)
 
         # Reproducir música
         pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
@@ -249,6 +262,7 @@ class Expedition(Scene):
         if self.state.is_current(STATE_DRAFT):
             # Inicializar estado
             if self.state.is_entering:
+                self.dice_roll_sound.play(-1)
                 self.draft_completed_timer.reset()
 
             player_key = [pygame.K_z, pygame.K_m] # teclas de cada jugador para capturar dado
@@ -261,14 +275,17 @@ class Expedition(Scene):
                         self.dice_result[i] = random.randint(1, 5)
                         if keys_down[player_key[i]]:
                             self.draft_ready[i] = True
+                            self.dice_number_sound.play()
                 # Si ya todos presionaron completar el draft
                 if self.draft_ready[TURN_PLAYER_ONE] and self.draft_ready[TURN_PLAYER_TWO]:
+                    self.dice_roll_sound.stop()
                     self.draft_completed_timer.start(2000)
 
             # Después de un tiempo de completar el draft
             elif self.draft_completed_timer.has_finished:
                 # En caso que ambos tenga el mismo dado, se repite el draft
                 if self.dice_result[TURN_PLAYER_ONE] == self.dice_result[TURN_PLAYER_TWO]:
+                    self.dice_roll_sound.play(-1)
                     self.draft_ready = [False for _ in range(PLAYER_COUNT)]
                     self.draft_completed_timer.reset()
                 else:
@@ -327,6 +344,7 @@ class Expedition(Scene):
             if self.state.is_entering:
                 self.dice_result[self.turn] = 0
                 self.dice_thrown_timer.reset()
+                self.dice_roll_sound.play(-1)
                 self.dice_rolling_timer.start(50)
 
             # Si el dado aún no ha sido lanzado
@@ -337,9 +355,12 @@ class Expedition(Scene):
                     self.dice_rolling_timer.start(50)
                 # Si cancela, regresar al menú de estrategia (no permitido para dado gratis)
                 if self.input.is_cancel_button_down() and not self.free_dice:
+                    self.dice_roll_sound.stop()
                     self.state.transition_to(STATE_STRATEGY)
                 # Si confirma, lanzar dado
                 elif self.input.is_confirm_button_down():
+                    self.dice_roll_sound.stop()
+                    self.dice_number_sound.play()
                     self.dice_thrown_timer.start(2000)
                 # Acciones especiales para depuración del programa (seleccionar valor de dado)
                 elif keys_down[pygame.K_1]:
@@ -363,7 +384,7 @@ class Expedition(Scene):
                 # Si hay suficiente energia o es dado gratutio
                 if self.energy[self.turn] > 0 or self.free_dice:
                     # Realizar la acción de moverse
-                    # Gastar un punto de nergia si no es dado gratutio
+                    # Gastar un punto de energia si no es dado gratutio
                     if not self.free_dice:
                         self.energy[self.turn] -= 1
                     # Reiniciar dado gratuito para siguientes turnos
@@ -412,6 +433,8 @@ class Expedition(Scene):
         elif self.state.is_current(STATE_ACTION):
             # Inicializar estado y temporizador
             if self.state.is_entering:
+                self.move_action_sound.play(-1)
+                self.target_ods = self.img_ods_cards[self.teams[self.turn].ods - 1][random.randint(0, 2)]
                 self.action_anim_timer.start(500)
             
             # Si hay pasos por realizar y el temporizador terminó
@@ -434,6 +457,7 @@ class Expedition(Scene):
 
             # Si no hay más pasos por realizar
             if self.dice_result[self.turn] == 0  and self.action_anim_timer.has_finished:
+                self.move_action_sound.stop()
                 # Y cayó en una estación, realizar lógica
                 if board.is_cell_station_at(self.board, self.position[self.turn]):
                     self.state.transition_to(STATE_STATION)
@@ -572,6 +596,8 @@ class Expedition(Scene):
         elif self.state.is_current(STATE_WIN):
             # Al inicio, comenzar temporizador de 5 segundos
             if self.state.is_entering:
+                pygame.mixer.music.load(resources.music.PLAYER_WON)
+                pygame.mixer.music.play()
                 self.endgame_timer.start(5000)
 
             if self.endgame_timer.has_started:
@@ -584,16 +610,19 @@ class Expedition(Scene):
                 if self.input.is_confirm_button_down():
                     context.scene.change(SCENE_CREDITS)
         
-        # Estado de partida ganada
+        # Estado de partida empatada
         elif self.state.is_current(STATE_TIES):
             # Al inicio, comenzar temporizador de 5 segundos
             if self.state.is_entering:
+                pygame.mixer.music.load(resources.music.TIE_THEME)
+                pygame.mixer.music.play(-1)
                 self.endgame_timer.start(5000)
             
             # Después de 5 segundos
             if self.endgame_timer.has_finished:
                 # Si el jugador confirma, ir al menú principal
                 if self.input.is_confirm_button_down():
+                    pygame.mixer.music.stop()
                     context.scene.change(SCENE_MAIN_MENU)
 
         # Si hay un turno activo y la partida no ha finalizado, poner la camara sobre el jugador activo
@@ -660,46 +689,16 @@ class Expedition(Scene):
             offset_y = -offset_abs if i == TURN_PLAYER_ONE else offset_abs
             coords = self.coords_by_camera(screen, (pos.col * TILE_SIZE + offset_x, pos.row * TILE_SIZE + offset_y))
             screen.blit(self.team_spaceship_img[i], coords)
+
+        # Dibujar ODS
+        if self.target_ods and (self.state.is_current(STATE_ACTION) or self.state.is_current(STATE_END_OF_TURN)) and not self.insufficient and not self.disabled[self.turn]:
+            screen.blit(self.target_ods, (screen_rect.centerx - self.target_ods.get_width() // 2, screen_rect.height * 3/4 - self.target_ods.get_height() // 2))
         
         # Dibujar dado
         if self.state.is_current(STATE_THROW_DICE):
             dice = self.dice[self.dice_result[self.turn] - 1]
             if not self.dice_thrown_timer.has_started or self.dice_thrown_timer.ticks_elapsed // 250 % 2 == 0 and self.dice_thrown_timer.ticks_elapsed < 2000:
                 screen.blit(dice, (screen_rect.centerx - dice.get_width() // 2, screen_rect.height * 3/4 - dice.get_height() // 2))
-
-        # Dibujar draft
-        if self.state.is_current(STATE_DRAFT):
-            player_key_img = [self.img_key_icon_z, self.img_key_icon_m]
-            for i in range(0, PLAYER_COUNT, +1):
-                dice = self.dice[self.dice_result[i] - 1]
-                center_x = screen_rect.width * (1+i*2)/4
-                center_y = screen_rect.centery
-                # Dibujar dado
-                if not self.draft_completed_timer.has_started or self.draft_completed_timer.ticks_elapsed // 250 % 2 == 0 and self.draft_completed_timer.ticks_elapsed < 2000:
-                    screen.blit(dice, (center_x - dice.get_width() // 2, center_y - dice.get_height() // 2))
-                # Dibujar indicador de presionar boton
-                if not self.draft_ready[i]:
-                    indicator_offset = dice.get_height() // 2 + 50
-                    indicator_width = (10 + self.text_press.get_width() + 20 + player_key_img[i].get_width() + 10)
-                    indicator_left = center_x - indicator_width // 2
-                    indicator_top = center_y + indicator_offset
-                    pygame.draw.rect(screen, "white", (indicator_left, indicator_top, indicator_width, 40), border_radius=10)
-                    screen.blit(self.text_press, (indicator_left + 10, indicator_top + 10))
-                    screen.blit(player_key_img[i], (indicator_left + 10 + self.text_press.get_width() + 20, indicator_top + 4))
-                # Dibujar nombre de equipo arriba del dado
-                team_text = self.text_team_name[i]
-                screen.blit(self.text_team_name[i], (center_x - team_text.get_width() // 2, center_y - dice.get_height() // 2 - 60))
-            # Dibujar mensaje de quien le tocará primero
-            if self.draft_ready[TURN_PLAYER_ONE] and self.draft_ready[TURN_PLAYER_TWO]:
-                if self.dice_result[TURN_PLAYER_ONE] > self.dice_result[TURN_PLAYER_TWO]:
-                    draft_result_text = self.text_draft_to_team[TURN_PLAYER_ONE]
-                elif self.dice_result[TURN_PLAYER_TWO] > self.dice_result[TURN_PLAYER_ONE]:
-                    draft_result_text = self.text_draft_to_team[TURN_PLAYER_TWO]
-                else:
-                    draft_result_text = self.text_repeat_draft
-                coords = (screen_rect.centerx - draft_result_text.get_width() // 2, screen_rect.height * 3/4 - draft_result_text.get_height() // 2)
-                pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, draft_result_text.get_width() + 20, draft_result_text.get_height() + 20), border_radius=10)
-                screen.blit(draft_result_text, coords)
 
         # Dibujar descripción de consecuencia
         # Para obstáculos:
@@ -768,8 +767,8 @@ class Expedition(Scene):
             row = 40
             row_margin_top = 4
             row_margin_left = 10
-            pygame.draw.rect(screen, resources.colors.ui_bg_primary, (left - 4, top - 4, 200 + 8, row * 3), border_radius=10)
-            pygame.draw.rect(screen, "white", (left, top + row * self.option_selected, 200, 32), border_radius=10)
+            pygame.draw.rect(screen, resources.colors.ui_bg_primary, (left - 4, top - 4, 230 + 8, row * 3), border_radius=10)
+            pygame.draw.rect(screen, "white", (left, top + row * self.option_selected, 230, 32), border_radius=10)
             screen.blit(self.text_throw_dice_sel if self.option_selected == 0 else self.text_throw_dice, (left + row_margin_left, top + row_margin_top))
             screen.blit(self.text_use_item_sel if self.option_selected == 1 else self.text_use_item, (left + row_margin_left, top + row + row_margin_top))
             screen.blit(self.text_show_board_sel if self.option_selected == 2 else self.text_show_board, (left + row_margin_left, top + row * 2 + row_margin_top))
@@ -789,10 +788,46 @@ class Expedition(Scene):
             for i in range(0, self.board.size, +1):
                 for j in range(0, self.board.size, +1):
                     cell = self.board.matrix[i][j][1]
-                    if cell > 0:
-                        color = "red" if cell > 5 else "blue" if cell > 0 else "black"
-                        pygame.draw.rect(screen, color, (j * 32 +50, i * 32+400, 32, 32))
+                    color = "orange" if cell > 11 else "darkgreen" if cell > 10 else "red" if cell > 5 else "blue" if cell > 0 else "darkslateblue"
+                    text = self.text_indices_basic[self.board.matrix[i][j][0] - 1]
+                    pygame.draw.rect(screen, color, (j * 32 + 50, i * 32+200, 32, 32))
+                    screen.blit(text, (j * 32 + 50 + 16 - text.get_width() // 2, i * 32 + 200 + 16 - text.get_height() // 2))
         
+        # Dibujar draft
+        if self.state.is_current(STATE_DRAFT):
+            screen.blit(self.img_dark_overlay, (0, 0))
+            player_key_img = [self.img_key_icon_z, self.img_key_icon_m]
+            for i in range(0, PLAYER_COUNT, +1):
+                dice = self.dice[self.dice_result[i] - 1]
+                center_x = screen_rect.width * (1+i*2)/4
+                center_y = screen_rect.centery
+                # Dibujar dado
+                if not self.draft_completed_timer.has_started or self.draft_completed_timer.ticks_elapsed // 250 % 2 == 0 and self.draft_completed_timer.ticks_elapsed < 2000:
+                    screen.blit(dice, (center_x - dice.get_width() // 2, center_y - dice.get_height() // 2))
+                # Dibujar indicador de presionar boton
+                if not self.draft_ready[i]:
+                    indicator_offset = dice.get_height() // 2 + 50
+                    indicator_width = (10 + self.text_press.get_width() + 20 + player_key_img[i].get_width() + 10)
+                    indicator_left = center_x - indicator_width // 2
+                    indicator_top = center_y + indicator_offset
+                    pygame.draw.rect(screen, "white", (indicator_left, indicator_top, indicator_width, 40), border_radius=10)
+                    screen.blit(self.text_press, (indicator_left + 10, indicator_top + 10))
+                    screen.blit(player_key_img[i], (indicator_left + 10 + self.text_press.get_width() + 20, indicator_top + 4))
+                # Dibujar nombre de equipo arriba del dado
+                team_text = self.text_team_name[i]
+                screen.blit(self.text_team_name[i], (center_x - team_text.get_width() // 2, center_y - dice.get_height() // 2 - 60))
+            # Dibujar mensaje de quien le tocará primero
+            if self.draft_ready[TURN_PLAYER_ONE] and self.draft_ready[TURN_PLAYER_TWO]:
+                if self.dice_result[TURN_PLAYER_ONE] > self.dice_result[TURN_PLAYER_TWO]:
+                    draft_result_text = self.text_draft_to_team[TURN_PLAYER_ONE]
+                elif self.dice_result[TURN_PLAYER_TWO] > self.dice_result[TURN_PLAYER_ONE]:
+                    draft_result_text = self.text_draft_to_team[TURN_PLAYER_TWO]
+                else:
+                    draft_result_text = self.text_repeat_draft
+                coords = (screen_rect.centerx - draft_result_text.get_width() // 2, screen_rect.height * 3/4 - draft_result_text.get_height() // 2)
+                pygame.draw.rect(screen, "white", (coords[0] - 10, coords[1] - 10, draft_result_text.get_width() + 20, draft_result_text.get_height() + 20), border_radius=10)
+                screen.blit(draft_result_text, coords)
+
         # Dibujar partida ganada
         if self.state.is_current(STATE_WIN):
             congrats_text = self.text_congratulations_to_team[self.turn]
@@ -813,8 +848,8 @@ class Expedition(Scene):
         # Dibujar indicador de estado
         state_text = self.text_state[self.state.current_state]
         state_text_box_width = state_text.get_width() + 50 * 2
-        pygame.draw.rect(screen, "white", (screen_rect.centerx - state_text_box_width // 2, screen_rect.height - 32, state_text_box_width, 32), border_top_left_radius=10, border_top_right_radius=10)
-        screen.blit(state_text, (screen_rect.centerx - state_text.get_width() // 2, screen_rect.height - state_text.get_height()))
+        pygame.draw.rect(screen, "white", (screen_rect.centerx - state_text_box_width // 2, screen_rect.height - 40, state_text_box_width, 40), border_top_left_radius=10, border_top_right_radius=10)
+        screen.blit(state_text, (screen_rect.centerx - state_text.get_width() // 2, screen_rect.height - state_text.get_height() - 6))
 
 
     def exit(self, context: GameContext):
