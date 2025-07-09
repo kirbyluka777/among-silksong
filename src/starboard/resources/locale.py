@@ -12,6 +12,7 @@ DRAFT_TO_PLAYER_FMT = "Le toca a {0}!"
 REPEAT_DRAFT = "Vuelvan a lanzar!"
 CONGRATULATIONS_TO_PLAYER_FMT = "Felicitaciones, {0}!"
 TIES_MSG = "Todos los jugadores se quedaron sin energía..."
+REPORT_SUCCESS_MSG = "El reporte fue generado éxitosamente!"
 
 SKIPPED_TURN = "Este turno será omitido"
 NOT_ENOUGH_ENERGY = "No tienes suficiente energía"

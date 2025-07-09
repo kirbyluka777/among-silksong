@@ -239,11 +239,12 @@ class Expedition(Scene):
         self.camera_pos = (0, 0)
 
         # Crear archivo de expedicion
-        self.expedition_id = expeditions.save_expedition(self.teams[TURN_PLAYER_ONE].name,
-                                    self.teams[TURN_PLAYER_TWO].name,
-                                    self.board.size,
-                                    self.board.difficulty,
-                                    self.board.dir)
+        self.expedition_id = expeditions.save_expedition(
+            self.teams[TURN_PLAYER_ONE].name,
+            self.teams[TURN_PLAYER_TWO].name,
+            self.initial_energy,
+            self.board.difficulty,
+            self.board.dir)
 
         # Reproducir música
         pygame.mixer.music.load(resources.music.EXPEDITION_THEME)

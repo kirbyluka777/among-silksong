@@ -1,5 +1,5 @@
 from engine import *
-from engine.controllers.ui import Button, InputBox, Text
+from engine.controllers.ui import Button, InputBox, Text, InterfaceController
 from ..constants import *
 from .. import resources
 from ..logic.search_b import search_b
@@ -10,13 +10,16 @@ BOX_HEIGHT = 32
 class TeamStats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
+        self.success_text = self.font.render(resources.locale.REPORT_SUCCESS_MSG, True, "white")
 
     def start(self, context: GameContext):
         screen = context.get_screen()
         pygame.mixer.music.play(-1)
+        self.interface = InterfaceController(context)
+        self.success = False
         self.text = Text(
             context,
             text="Ingrese el codigo de un equipo para ver sus estadisticas.",
@@ -43,7 +46,7 @@ class TeamStats(Scene):
             flag=True)
         self.button_search = Button(
             context,
-            pos=(250,200),
+            pos=(1000,200),
             dim=(100,32),
             inactive_color="white",
             active_color=resources.colors.RED,
@@ -67,10 +70,12 @@ class TeamStats(Scene):
         self.button_back.draw(screen)
         self.button_search.draw(screen)
         self.text.draw(screen)
+        if self.success:
+            self.interface.draw_surface(self.success_text)
             
     def exit(self, context: GameContext):
         pygame.mixer.music.stop()
         pass
 
     def id_input(self):
-        search_b(int(self.input_id.text))
+        self.success = search_b(int(self.input_id.text))

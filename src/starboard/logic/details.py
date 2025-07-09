@@ -13,13 +13,13 @@ EVENT_CELL_VISIT = 1
 #save_details(1,1,cel_type=4)
 
 class MoveEvent():
-    def __init__(self, player_id, steps, index):
+    def __init__(self, player_id: int, steps: int, index: int):
         self.player_id = player_id
         self.steps = steps
         self.index = index
 
 class CellVisitEvent():
-    def __init__(self, player_id, cell_type, consequence):
+    def __init__(self, player_id: int, cell_type: int, consequence: str):
         self.player_id = player_id
         self.cell_type = cell_type
         self.consequence = consequence
@@ -44,7 +44,7 @@ def save_details(
         file.write(bytes)
     file.close()
 
-def read_details(id):
+def read_details(id) -> list[MoveEvent | CellVisitEvent]:
     filename = DETAILS_FILE.format(id)
     if not os.path.isfile(filename):
         return []
@@ -74,7 +74,7 @@ def read_details(id):
 def get_total_km_from_expedition(expedition_id, turn):
     km = 0
     for detail in read_details(expedition_id):
-        if isinstance(detail, MoveEvent) and detail.player_id == turn:
+        if isinstance(detail, MoveEvent) and (turn is None or detail.player_id == turn):
             km += detail.steps
     return km
 

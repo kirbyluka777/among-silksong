@@ -13,9 +13,8 @@ BOX_HEIGHT = 32
 class BestStats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
-        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
         self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+        self.report_text = None
         self.report_font = pygame.font.SysFont("Courier New", 18)
         self.not_found_text = self.font.render("País no encontrado", True, "white")
         self.no_data_text = self.font.render("No hay datos para este país", True, "white")
@@ -61,9 +60,9 @@ class BestStats(Scene):
             active_color=resources.colors.RED,
             text='Buscar',
             action=lambda: self.search(self.input_id.text),
+            font=self.font,
             sound_sel=self.button_sound_sel,
             sound_press=self.button_sound_pressed,
-            font=self.font,
             flag=True)
 
     def update(self, context: GameContext):
@@ -123,15 +122,14 @@ class BestStats(Scene):
                             longest = km
                             expedition_detail = current_detail
                 if longest:
-                    longest_str = f"{longest} km"
-                    report += f"{team.name:<20} | {longest_str:>12} | {expedition_detail}\n"
+                    report += f"{team.name:<20} | {longest*1000:>12} km | {expedition_detail}\n"
 
         self.report_text = [self.report_font.render(line, True, "white") for line in report.split("\n")] if report else []
 
 def get_expedition_detail_as_str(expedition: expeditions.Expedition):
     dir = "Horario" if expedition.board_dir == BOARD_DIR_OCLOCK else "Antihorario"
     diff = get_difficulty_by_id(expedition.difficulty)
-    return f"{expedition.id:>8} | {expedition.date:<8} | {dir:<12} | {diff:<8} | {expedition.board_size:>2}"
+    return f"{expedition.id:>8} | {expedition.date:<8} | {dir:<12} | {diff:<8} | {expedition.initial_energy:>2}"
 
 def get_difficulty_by_id(id: int):
     if id == BOARD_DIFFICULTY_EASY:

@@ -8,11 +8,11 @@ EXPEDITION_FORMAT = "i20s20siii10s"
 EXPEDITION_SIZE = struct.calcsize(EXPEDITION_FORMAT)
 
 class Expedition:
-    def __init__(self, id, team_name_1, team_name_2, board_size, difficulty, board_dir, date):
+    def __init__(self, id, team_name_1, team_name_2, initial_energy, difficulty, board_dir, date):
         self.id = id
         self.team_name_1 = team_name_1
         self.team_name_2 = team_name_2
-        self.board_size = board_size
+        self.initial_energy = initial_energy
         self.difficulty = difficulty
         self.board_dir = board_dir
         self.date = date
@@ -45,8 +45,8 @@ def read_expeditions() -> list[Expedition]:
             return exp
         else:
             id, name1, name2, en_unit, difficulty, direction, date = struct.unpack(EXPEDITION_FORMAT,bytes)
-            name1 = name1.decode('utf-8').strip('\x00')
-            name2 = name2.decode('utf-8').strip('\x00')
-            date = date.decode('utf-8').strip('\x00')
-            records[i] = Expedition(id, name1, name2, en_unit, difficulty, direction, date)
+            name1 = name1.decode('utf-8').strip().strip('\x00')
+            name2 = name2.decode('utf-8').strip().strip('\x00')
+            date = date.decode('utf-8').strip().strip('\x00')
+            exp[i] = Expedition(id, name1, name2, en_unit, difficulty, direction, date)
             i += 1
