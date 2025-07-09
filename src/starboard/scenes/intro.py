@@ -79,7 +79,7 @@ class Intro(Scene):
                 self.interface.draw_fade_in(card, ticks=self.intro_timer.ticks_elapsed - (ticks_offset + card_ticks_offset), duration=500)
 
             if self.intro_timer.ticks_elapsed >= ticks_offset + 500 + card_ticks_offset and self.intro_timer.ticks_elapsed <= ticks_offset + 4000 + card_ticks_offset:
-                self.img_pygame.set_alpha(255)
+                card.set_alpha(255)
                 self.interface.draw_surface(card)
 
             if self.intro_timer.ticks_elapsed > ticks_offset + 4000 + card_ticks_offset and self.intro_timer.ticks_elapsed < ticks_offset + 4500 + card_ticks_offset:

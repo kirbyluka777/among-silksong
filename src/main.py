@@ -19,6 +19,7 @@ setup = GameSetup("Coconut", [
     BestStats(),
     TeamStats(),
     Top10Stats(),
+    Credits(),
     Wip(),
     Coconut()])
 

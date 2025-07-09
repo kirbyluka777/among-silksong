@@ -80,7 +80,7 @@ class CreateTeam(Scene):
                                      ['#696969', '#ffffff'],
                                      ['#696969', '#ffffff'],
                                      400, 80,350,32,
-                                     pygame.font.Font(resources.fonts.RETRO_GAMING, 18),
+                                     pygame.font.Font(resources.fonts.COINY, 18),
                                      'ODS',
                                      list(m for n,m in enumerate(globals.ods)))
         self.sel_country = None
