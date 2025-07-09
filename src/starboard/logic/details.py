@@ -32,7 +32,7 @@ def save_details(
         cell_type:int=None,
         consequence:str=None):
     filename = DETAILS_FILE.format(id)
-    records.increment_records_len(filename)
+    idx = records.increment_records_len(filename)
     file = open(filename, 'ab')
     bytes = struct.pack('i', event_type)
     file.write(bytes)
@@ -53,6 +53,7 @@ def read_details(id):
     i = 0
 
     file = open(filename, 'rb')
+    file.seek(4)
     while True:
         bytes = file.read(4)
         if not bytes:
@@ -68,12 +69,13 @@ def read_details(id):
             player_id, cell_type, consequence = struct.unpack(DETAILS_CELL_VISIT_FORMAT, bytes)
             consequence = consequence.decode('utf-8').strip('\x00')
             details[i] = CellVisitEvent(player_id, cell_type, consequence)
+        i += 1
 
-def get_total_km_from_expedition(expedition_id):
+def get_total_km_from_expedition(expedition_id, turn):
     km = 0
     for detail in read_details(expedition_id):
-        if isinstance(detail, MoveEvent):
-            km = detail.steps
+        if isinstance(detail, MoveEvent) and detail.player_id == turn:
+            km += detail.steps
     return km
 
 if __name__=="__main__":

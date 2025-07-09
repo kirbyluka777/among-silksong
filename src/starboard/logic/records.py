@@ -31,7 +31,7 @@ def increment_records_len(filename) -> int:
 
         # Guardar nueva cantidad
         file.seek(0)
-        records_len_bytes, = struct.pack("i", new_records_len)
+        records_len_bytes = struct.pack("i", new_records_len)
         file.write(records_len_bytes)
 
         # cerramos archivo

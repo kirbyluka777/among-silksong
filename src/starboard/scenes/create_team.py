@@ -129,7 +129,7 @@ class CreateTeam(Scene):
 
         if name and email and password and not any(self.warning_flags):
             team_id = increment_records_len(TEAM_FILE)
-            new_team = Team(team_id.strip(),name,email.strip(),password.strip(), 'RUS')
+            new_team = Team(team_id, name, email.strip(), password.strip(), 'RUS')
             globals.teams.append(new_team)
             teams.save_record(new_team)
             print(f'registrado: {new_team.name}\n'
