@@ -1,8 +1,8 @@
 import os
 import struct
-import records
+from . import records
 
-DETAILS_FILE = 'data/detalles_{0}.bin'
+DETAILS_FILE = 'data\\detalles_{0}.bin'
 DETAILS_MOVE_FORMAT = 'iii' # Codigo de jugador, Pasos, Indice
 DETAILS_MOVE_SIZE = struct.calcsize(DETAILS_MOVE_FORMAT)
 DETAILS_CELL_VISIT_FORMAT = 'ii50s'

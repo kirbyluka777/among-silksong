@@ -2,6 +2,8 @@ import os
 import struct
 
 def get_records_len(filename):
+    if not os.path.isfile(filename):
+        return 0
     file = open(filename, 'rb')
     records_len_bytes = file.read(4)
     records_len, = struct.unpack("i", records_len_bytes)

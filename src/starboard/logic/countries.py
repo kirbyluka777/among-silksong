@@ -1,8 +1,8 @@
 import os
 import struct
-import records
+from . import records
 
-COUNTRY_FILE = "data/Paises.bin"
+COUNTRY_FILE = "data\\Paises.bin"
 COUNTRY_FORMAT = "3s20s"
 COUNTRY_SIZE = struct.calcsize(COUNTRY_FORMAT)
 

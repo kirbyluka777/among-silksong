@@ -2,6 +2,7 @@ from engine import *
 from engine.controllers.ui import Button, InputBox, Text
 from ..constants import *
 from .. import resources
+from ..logic.search_b import search_b
 
 BOX_WIDTH = 140
 BOX_HEIGHT = 32
@@ -41,7 +42,7 @@ class TeamStats(Scene):
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Buscar',
-            action=self.id_input(),
+            action=self.id_input,
             font=self.font)
 
     def update(self, context: GameContext):
@@ -62,4 +63,4 @@ class TeamStats(Scene):
         pass
 
     def id_input(self):
-        pass
+        search_b(int(self.input_id.text))

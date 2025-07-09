@@ -5,6 +5,8 @@ from .. import resources
 from .. import globals
 from ..logic import teams
 from ..logic.teams import Team
+from ..logic.teams import TEAM_FILE
+from ..logic.records import increment_records_len
 
 BOX_WIDTH = 140
 BOX_HEIGHT = 32
@@ -116,7 +118,8 @@ class CreateTeam(Scene):
         password = self.input_password.text
 
         if name and email and password and not any(self.warning_flags):
-            new_team = Team(name,email,password)
+            team_id = increment_records_len(TEAM_FILE)
+            new_team = Team(team_id,name,email,password)
             globals.teams.append(new_team)
             teams.save_record(new_team)
             print(f'registrado: {new_team.name}\n'

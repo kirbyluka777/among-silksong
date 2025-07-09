@@ -1,0 +1,17 @@
+REPORTE: EQUIPO Rusia Y EXPEDICIONES EN LAS QUE HA PARTICIPADO
+----------------------------------------------
+DATOS DE EQUIPO
+ID:	1
+NOMBRE:	Rusia
+CORREO:	asdas
+
+----------------------------------------------
+EXPEDICIONES
+FECHA	2025/07/
+ID	1
+EQUIPO 1	Estados Unidos      
+EQUIPO 2	Rusia               
+TAMAÑO DEL TABLERO	5
+DIFICULTAD	BASICO
+DIRECCION	HORARIO
+

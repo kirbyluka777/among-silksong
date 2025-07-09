@@ -65,13 +65,4 @@ class BestStats(Scene):
 
     def id_input(self, code):
         for expedition in expeditions.read_expeditions():
-
-            for detail in details.read_details(exp):
-                print(expedition.id)
-
-        exp = open(expeditions.EXPEDITION_FILE, 'rb')
-        det = open(details.DETAILS_FILE, 'rb')
-        while True:
-            bytes = exp.read(expeditions.EXPEDITION_SIZE)
-            if not bytes:
-                break
+            ...

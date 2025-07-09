@@ -1,41 +1,46 @@
 import os
 import struct
+from . import records
         
-TEAM_FILE = 'data/equipos.bin'
-TEAM_FORMAT = '20s50s8s'
+TEAM_FILE = 'data\\equipos.bin'
+TEAM_FORMAT = 'i20s50s8s'
 TEAM_SIZE = struct.calcsize(TEAM_FORMAT)
 
 class Team:
-    def __init__(self, name, email, password):#, country, ods
+    def __init__(self, id, name, email, password):#, country, ods
+        self.id = id
         self.name = name # 20 caracteres
         self.email = email # 
         self.password = password
 
 def save_record(data:Team):
     with open(TEAM_FILE, 'ab') as file:
+        id = data.id
         name = data.name.encode('utf-8')
         email = data.email.encode('utf-8')
         password = data.password.encode('utf-8')
 
-        packed_data = struct.pack(TEAM_FORMAT, name, email, password)
+        packed_data = struct.pack(TEAM_FORMAT, id, name, email, password)
 
         file.write(packed_data)
 
 def load_records(game):
     if not os.path.isfile(TEAM_FILE):
         return []
-    results = []
+    teams_len = records.get_records_len(TEAM_FILE)
+    equipos = [None for _ in teams_len]
+    i = 0
     with open(TEAM_FILE, 'rb') as file:
         while True:
             bytes = file.read(TEAM_SIZE)
             if not bytes:
-                return results
-            name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+                return equipos
+            id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
             name = name.decode('utf-8').strip('\x00')
             email = email.decode('utf-8').strip('\x00')
             password = password.decode('utf-8').strip('\x00')
 
-            results.append(Team(name, email, password))
+            equipos[i] = Team(id, name, email, password)
 
 def XOR_Encrypt(text, key):
     return ' '.join(str(ord(c) ^ int(key)) for c in text)
@@ -87,3 +92,26 @@ def repeat_3(password):
         if password[i] == password[i+1] == password[i+2]:
             return True
     return False
+
+def search_team(id):
+    if not os.path.isfile(TEAM_FILE):
+        return None
+    teams_len = records.get_records_len(TEAM_FILE)
+    if id < 0 or id > teams_len:
+        print("id < 0 or id > max len")
+        return None
+    
+    file = open(TEAM_FILE, 'rb')
+
+    file.seek(4 + TEAM_SIZE*(id-1))
+
+    bytes = file.read(TEAM_SIZE)
+
+    id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+
+    name = name.decode('utf-8').strip('\x00')
+    email = email.decode('utf-8').strip('\x00')
+    password = password.decode('utf-8').strip('\x00')
+
+    file.close()
+    return Team(id,name,email,password)
