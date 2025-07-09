@@ -2,11 +2,11 @@ import random
 from engine import *
 from ..constants import *
 from .. import resources
+from .. import globals 
 from ..inputs import PlayerInput
 from ..logic import board
-from ..menu.team import Team
-from .. import globals
-from..logic.items import Item
+from ..logic.teams import Team
+from ..logic.items import Item
 from ..logic import expeditions
 from ..logic import details
 
@@ -62,8 +62,8 @@ class Expedition(Scene):
             pygame.image.load(resources.images.SUS_2)
         ]
         self.teams = [
-            Team("Estados Unidos", "administration@gov.us", "XXX"),
-            Team("Rusia", "administration@gov.ru", "XXX")
+            Team(1, "Estados Unidos", "administration@gov.us", "XXX", "USA", 16),
+            Team(2, "Rusia", "administration@gov.ru", "XXX", "RUS", 9)
         ]
         for i in range(0, len(self.team_pfp)):
             self.team_pfp[i] = pygame.transform.scale(self.team_pfp[i], (64, 64))
@@ -117,6 +117,8 @@ class Expedition(Scene):
 
         self.img_dark_overlay = pygame.Surface(screen_rect.size, pygame.SRCALPHA)
         self.img_dark_overlay.fill((0, 0, 0, 128))
+
+        self.img_ods_cards = [[pygame.transform.scale(pygame.image.load(card), (400, 400)) for card in ods] for ods in resources.images.ODS_CARDS]
 
         self.menu_font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
 
@@ -233,6 +235,7 @@ class Expedition(Scene):
         self.immunity = [False for _ in range(PLAYER_COUNT)]
         self.disabled = [False for _ in range(PLAYER_COUNT)]
         self.draft_ready = [False for _ in range(PLAYER_COUNT)]
+        self.target_ods = None
         self.camera_pos = (0, 0)
 
         # Crear archivo de expedicion
@@ -430,6 +433,7 @@ class Expedition(Scene):
             # Inicializar estado y temporizador
             if self.state.is_entering:
                 self.move_action_sound.play(-1)
+                self.target_ods = self.img_ods_cards[self.teams[self.turn].ods - 1][random.randint(0, 2)]
                 self.action_anim_timer.start(500)
             
             # Si hay pasos por realizar y el temporizador terminó
@@ -684,6 +688,10 @@ class Expedition(Scene):
             offset_y = -offset_abs if i == TURN_PLAYER_ONE else offset_abs
             coords = self.coords_by_camera(screen, (pos.col * TILE_SIZE + offset_x, pos.row * TILE_SIZE + offset_y))
             screen.blit(self.team_spaceship_img[i], coords)
+
+        # Dibujar ODS
+        if self.target_ods and (self.state.is_current(STATE_ACTION) or self.state.is_current(STATE_END_OF_TURN)) and not self.insufficient and not self.disabled[self.turn]:
+            screen.blit(self.target_ods, (screen_rect.centerx - self.target_ods.get_width() // 2, screen_rect.height * 3/4 - self.target_ods.get_height() // 2))
         
         # Dibujar dado
         if self.state.is_current(STATE_THROW_DICE):
