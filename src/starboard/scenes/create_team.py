@@ -119,12 +119,13 @@ class CreateTeam(Scene):
 
         if name and email and password and not any(self.warning_flags):
             team_id = increment_records_len(TEAM_FILE)
-            new_team = Team(team_id,name,email,password)
+            new_team = Team(team_id,name,email,password, 'RUS')
             globals.teams.append(new_team)
             teams.save_record(new_team)
             print(f'registrado: {new_team.name}\n'
                   f'correo: {new_team.email}\n'
-                  f'contrasena: {new_team.password}')
+                  f'contrasena: {new_team.password}\'n'
+                  f'pais: {new_team.country_code}')
             self.input_name.text = self.input_email.text = self.input_password.text = ''
             for box in self.input_boxes:
                 box.txt_surface = pygame.font.SysFont(None, 32).render(box.text, True, box.color)

@@ -45,9 +45,9 @@ def save_details(
     file.close()
 
 def read_details(id):
-    if not os.path.isfile(filename):
-        return
     filename = DETAILS_FILE.format(id)
+    if not os.path.isfile(filename):
+        return []
     details_len = records.get_records_len(filename)
     details = [None for _ in range(details_len)]
     i = 0
@@ -58,7 +58,7 @@ def read_details(id):
         if not bytes:
             file.close()
             return details
-        e = struct.unpack('i', bytes)
+        e, = struct.unpack('i', bytes)
         if e == EVENT_MOVE:
             bytes = file.read(DETAILS_MOVE_SIZE)
             player_id, steps, index = struct.unpack(DETAILS_MOVE_FORMAT, bytes)
@@ -69,6 +69,12 @@ def read_details(id):
             consequence = consequence.decode('utf-8').strip('\x00')
             details[i] = CellVisitEvent(player_id, cell_type, consequence)
 
+def get_total_km_from_expedition(expedition_id):
+    km = 0
+    for detail in read_details(expedition_id):
+        if isinstance(detail, MoveEvent):
+            km = detail.steps
+    return km
 
 if __name__=="__main__":
     sex = read_details(2)

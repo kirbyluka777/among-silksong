@@ -88,7 +88,7 @@ class BestStats(Scene):
                     elif expedition.team_name_2 == team.name:
                         player_turn = 1
                     if player_turn is not None:
-                        km = get_total_km_from_expedition(expedition.id, 0)
+                        km = details.get_total_km_from_expedition(expedition.id, 0)
                         current_detail = get_expedition_detail_as_str(expedition)
                         if km > longest:
                             longest = km
@@ -97,13 +97,6 @@ class BestStats(Scene):
                 report += f"{team.name:<20} | {longest_str:>12} | {expedition_detail}\n"
 
         print(report)
-
-def get_total_km_from_expedition(expedition_id, turn):
-    km = 0
-    for detail in details.read_details(expedition_id):
-        if isinstance(detail, details.MoveEvent):
-            km = detail.steps
-    return km
 
 def get_expedition_detail_as_str(expedition: expeditions.Expedition):
     dir = "Horario" if expedition.board_dir == BOARD_DIR_OCLOCK else "Antihorario"

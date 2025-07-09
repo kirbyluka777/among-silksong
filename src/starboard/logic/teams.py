@@ -15,7 +15,7 @@ class Team:
         self.country_code = country_code
 
 def save_record(data:Team):
-    file = open(TEAM_FILE, 'ab'):
+    file = open(TEAM_FILE, 'ab')
 
     id = data.id
     name = data.name.encode('utf-8')
@@ -114,11 +114,27 @@ def search_team(id):
 
     bytes = file.read(TEAM_SIZE)
 
-    id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+    id, name, email, password, country = struct.unpack(TEAM_FORMAT, bytes)
 
     name = name.decode('utf-8').strip('\x00')
     email = email.decode('utf-8').strip('\x00')
     password = password.decode('utf-8').strip('\x00')
+    country = country.decode('utf-8').strip('\x00')
 
     file.close()
-    return Team(id,name,email,password)
+    return Team(id,name,email,password,country)
+
+def team_name_exists(team_name):
+    if not os.path.isfile(TEAM_FILE):
+        return False
+    
+    file = open(TEAM_FILE, 'rb')
+
+    file.seek(4)
+    while True:
+        bytes = file.read(TEAM_SIZE)
+        if not bytes: return False
+        id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+        name = name.decode('utf-8').strip('\x00')
+        if team_name == name:
+            return True
