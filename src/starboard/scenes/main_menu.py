@@ -6,12 +6,16 @@ from .. import resources
 class MainMenu(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.font = Font(resources.fonts.BEACH_BALL, 40)
         self.title_text = self.font.render(resources.locale.GAME_TITLE, True, "white")
+        self.menu_theme = pygame.mixer.music
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
         
     def start(self, context: GameContext):
         screen = context.get_screen()
-
+        pygame.mixer.music.load(resources.music.MENU_THEME)
+        pygame.mixer.music.play(-1)
         # Crear botones
         button_x = screen.get_width() // 4
         button_y = screen.get_height() // 2
@@ -23,7 +27,10 @@ class MainMenu(Scene):
             active_color=resources.colors.BRIGHT_GREEN,
             text='Jugar',
             action=lambda: context.scene.change(SCENE_GAME_CONFIG),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_registro = Button(
             context=context,
             pos=(button_x, button_y),
@@ -32,7 +39,10 @@ class MainMenu(Scene):
             active_color=resources.colors.BRIGHT_GREEN,
             text='Registrar equipo',
             action=lambda: context.scene.change(SCENE_CREATE_TEAM),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_estadisticas = Button(
             context=context,
             pos=(button_x, button_y + 80),
@@ -41,7 +51,10 @@ class MainMenu(Scene):
             active_color=resources.colors.BRIGHT_GREEN,
             text='Estadisticas',
             action=lambda: context.scene.change(SCENE_STATS),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_options = Button(
             context=context,
             pos=(button_x, button_y + 160),
@@ -50,7 +63,10 @@ class MainMenu(Scene):
             active_color=resources.colors.BRIGHT_GREEN,
             text='OPCIONES',
             action=lambda: context.scene.change(SCENE_OPTIONS),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_quit = Button(
             context=context,
             pos=(button_x, button_y + 240),
@@ -59,7 +75,10 @@ class MainMenu(Scene):
             active_color=resources.colors.BRIGHT_RED,
             text="QUIT",
             action=lambda: context.quit(),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         
         self.buttons = [
             self.button_play,
@@ -87,4 +106,5 @@ class MainMenu(Scene):
             button.draw(screen)
             
     def exit(self, context: GameContext):
+        pygame.mixer.music.stop()
         pass

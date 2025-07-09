@@ -6,12 +6,15 @@ from ..inputs import PlayerInput
 
 class GameConfig(Scene):
     def load(self, context):
-        self.bg = pygame.image.load(resources.images.MENU_BG)
+        self.bg = pygame.image.load(resources.images.DIFFICULTY_BG)
         self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 
     def start(self, context):
+        pygame.mixer.music.load(resources.music.SETTING_DIFFICULTY)
+        pygame.mixer.music.play(-1)
         self.input = PlayerInput(context)
-
         self.option_selected = 0
         self.difficulty = BOARD_DIFFICULTY_EASY
         self.board_dir = BOARD_DIR_OCLOCK
@@ -57,4 +60,5 @@ class GameConfig(Scene):
         screen.blit(self.text_dir, (screen.get_width() // 2 - self.text_dir.get_width() // 2, screen.get_height() // 3 + 100))
 
     def exit(self, context):
+        pygame.mixer.music.stop()
         pass

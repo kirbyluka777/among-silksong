@@ -10,9 +10,12 @@ class BestStats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
         self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 
     def start(self, context: GameContext):
-        screen = context.get_screen()
+        screen = context.get_screen()    
+        pygame.mixer.music.play(-1)
         self.text = Text(
             context,
             text="Ingrese el codigo de un pais para ver su mejor recorrido",
@@ -33,7 +36,10 @@ class BestStats(Scene):
             active_color=resources.colors.RED,
             text='Back',
             action=lambda: context.scene.change(SCENE_STATS),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_search = Button(
             context,
             pos=(250,200),
@@ -42,7 +48,10 @@ class BestStats(Scene):
             active_color=resources.colors.RED,
             text='Buscar',
             action=self.id_input(),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
 
     def update(self, context: GameContext):
         self.input_id.update()

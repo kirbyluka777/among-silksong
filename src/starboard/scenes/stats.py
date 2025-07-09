@@ -13,10 +13,13 @@ class Stats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
         self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 
     def start(self, context: GameContext):
         screen = context.get_screen()
-
+        pygame.mixer.music.load(resources.music.STATS_THEME)
+        pygame.mixer.music.play(-1)
         self.text = Text(
             context,
             text="Seleccione la opcion que desee ver",
@@ -31,7 +34,10 @@ class Stats(Scene):
             active_color=resources.colors.RED,
             text='Mejor expedicion de un pais',
             action=lambda: context.scene.change(SCENE_STATS_BEST),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_team_exp = Button(
             context,
             pos=(200,screen.get_height() - 400),
@@ -40,7 +46,10 @@ class Stats(Scene):
             active_color=resources.colors.RED,
             text='Expediciones de un equipo',
             action=lambda: context.scene.change(SCENE_STATS_TEAM),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_top10_exp = Button(
             context,
             pos=(160,screen.get_height() - 300),
@@ -49,7 +58,10 @@ class Stats(Scene):
             active_color=resources.colors.RED,
             text='Top 10 expediciones',
             action=lambda: context.scene.change(SCENE_STATS_TOP10),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_back = Button(
             context,
             pos=(100,screen.get_height() - 100),
@@ -58,7 +70,10 @@ class Stats(Scene):
             active_color=resources.colors.RED,
             text='Back',
             action=lambda: context.scene.change(SCENE_MAIN_MENU),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
 
     def update(self, context: GameContext):
         self.button_back.update()
@@ -77,4 +92,5 @@ class Stats(Scene):
         self.text.draw(screen)
             
     def exit(self, context: GameContext):
+        pygame.mixer.music.stop()
         pass

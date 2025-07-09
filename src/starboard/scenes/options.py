@@ -13,10 +13,13 @@ class Options(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
         self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 
     def start(self, context: GameContext):
         screen = context.get_screen()
-
+        pygame.mixer.music.load(resources.music.OPTIONS_THEME)
+        pygame.mixer.music.play(-1)
         self.pais = False
         
         # Crear botones
@@ -27,7 +30,10 @@ class Options(Scene):
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Volumen',
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_registrar = Button(
             context=context,
             pos=(screen.get_width()//2,250),
@@ -36,7 +42,10 @@ class Options(Scene):
             active_color=resources.colors.RED,
             text='Registrar pais',
             action=self.toggle_countries,
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_done = Button(
             context=context,
             pos=(screen.get_width() // 2 + 200,350), 
@@ -45,7 +54,10 @@ class Options(Scene):
             active_color=resources.colors.RED, 
             text='Listo', 
             action=self.register_country,
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_back = Button(
             context=context,
             pos=(100,screen.get_height() - 100),
@@ -54,7 +66,10 @@ class Options(Scene):
             active_color=resources.colors.RED,
             text='Back',
             action=lambda: context.scene.change(SCENE_MAIN_MENU),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         
         # Crear cajas de entrada
         self.input_code = InputBox(
@@ -101,6 +116,7 @@ class Options(Scene):
             self.button_done.draw(screen)
             
     def exit(self, context: GameContext):
+        pygame.mixer.music.stop()
         pass
     
     def toggle_countries(self):
@@ -111,10 +127,6 @@ class Options(Scene):
         name = self.input_name.text
 
         if code and name:
-            # countries=country.read_countries()
-            # if (code in countries) or (name in countries):
-            #     print("Pais ya existente")
-            # else:
             new_country = Country(code, name)
             globals.countries.append(new_country)
             countries.save_record(new_country)

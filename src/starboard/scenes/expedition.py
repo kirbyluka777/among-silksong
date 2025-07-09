@@ -45,6 +45,10 @@ class Expedition(Scene):
         self.team_spaceship_img[TURN_PLAYER_TWO].fill("blue", special_flags=pygame.BLEND_ADD)
         self.blue_bg_img = pygame.image.load(resources.images.BLUE_BG)
         self.cell_dot_blue_img = pygame.image.load(resources.images.CELL_DOT_BLUE)
+        self.dice_roll_sound = pygame.mixer.Sound(resources.sounds.DICE_ROLLING)
+        self.dice_number_sound = pygame.mixer.Sound(resources.sounds.GOT_NUMBER)
+        self.move_action_sound = pygame.mixer.Sound(resources.sounds.MOVE_SOUND)
+
         self.dice = [
             pygame.image.load(resources.images.DICE_1),
             pygame.image.load(resources.images.DICE_2),
@@ -211,6 +215,8 @@ class Expedition(Scene):
         self.endgame_timer = TimerController(context)
 
         # Inicializar estado
+        pygame.mixer.music.load(resources.music.EXPEDITION_THEME)
+        pygame.mixer.music.play(-1)
         self.board = board.generate_random_board(globals.board_size, globals.board_difficulty, globals.board_dir)
         self.option_selected = 0
         self.turn = None
@@ -252,6 +258,7 @@ class Expedition(Scene):
         if self.state.is_current(STATE_DRAFT):
             # Inicializar estado
             if self.state.is_entering:
+                self.dice_roll_sound.play(-1)
                 self.draft_completed_timer.reset()
 
             player_key = [pygame.K_z, pygame.K_m] # teclas de cada jugador para capturar dado
@@ -264,14 +271,17 @@ class Expedition(Scene):
                         self.dice_result[i] = random.randint(1, 5)
                         if keys_down[player_key[i]]:
                             self.draft_ready[i] = True
+                            self.dice_number_sound.play()
                 # Si ya todos presionaron completar el draft
                 if self.draft_ready[TURN_PLAYER_ONE] and self.draft_ready[TURN_PLAYER_TWO]:
+                    self.dice_roll_sound.stop()
                     self.draft_completed_timer.start(2000)
 
             # Después de un tiempo de completar el draft
             elif self.draft_completed_timer.has_finished:
                 # En caso que ambos tenga el mismo dado, se repite el draft
                 if self.dice_result[TURN_PLAYER_ONE] == self.dice_result[TURN_PLAYER_TWO]:
+                    self.dice_roll_sound.play(-1)
                     self.draft_ready = [False for _ in range(PLAYER_COUNT)]
                     self.draft_completed_timer.reset()
                 else:
@@ -330,6 +340,7 @@ class Expedition(Scene):
             if self.state.is_entering:
                 self.dice_result[self.turn] = 0
                 self.dice_thrown_timer.reset()
+                self.dice_roll_sound.play(-1)
                 self.dice_rolling_timer.start(50)
 
             # Si el dado aún no ha sido lanzado
@@ -340,9 +351,12 @@ class Expedition(Scene):
                     self.dice_rolling_timer.start(50)
                 # Si cancela, regresar al menú de estrategia (no permitido para dado gratis)
                 if self.input.is_cancel_button_down() and not self.free_dice:
+                    self.dice_roll_sound.stop()
                     self.state.transition_to(STATE_STRATEGY)
                 # Si confirma, lanzar dado
                 elif self.input.is_confirm_button_down():
+                    self.dice_roll_sound.stop()
+                    self.dice_number_sound.play()
                     self.dice_thrown_timer.start(2000)
                 # Acciones especiales para depuración del programa (seleccionar valor de dado)
                 elif keys_down[pygame.K_1]:
@@ -366,7 +380,7 @@ class Expedition(Scene):
                 # Si hay suficiente energia o es dado gratutio
                 if self.energy[self.turn] > 0 or self.free_dice:
                     # Realizar la acción de moverse
-                    # Gastar un punto de nergia si no es dado gratutio
+                    # Gastar un punto de energia si no es dado gratutio
                     if not self.free_dice:
                         self.energy[self.turn] -= 1
                     # Reiniciar dado gratuito para siguientes turnos
@@ -415,6 +429,7 @@ class Expedition(Scene):
         elif self.state.is_current(STATE_ACTION):
             # Inicializar estado y temporizador
             if self.state.is_entering:
+                self.move_action_sound.play(-1)
                 self.action_anim_timer.start(500)
             
             # Si hay pasos por realizar y el temporizador terminó
@@ -437,6 +452,7 @@ class Expedition(Scene):
 
             # Si no hay más pasos por realizar
             if self.dice_result[self.turn] == 0  and self.action_anim_timer.has_finished:
+                self.move_action_sound.stop()
                 # Y cayó en una estación, realizar lógica
                 if board.is_cell_station_at(self.board, self.position[self.turn]):
                     self.state.transition_to(STATE_STATION)
@@ -575,6 +591,8 @@ class Expedition(Scene):
         elif self.state.is_current(STATE_WIN):
             # Al inicio, comenzar temporizador de 5 segundos
             if self.state.is_entering:
+                pygame.mixer.music.load(resources.music.PLAYER_WON)
+                pygame.mixer.music.play()
                 self.endgame_timer.start(5000)
 
             if self.endgame_timer.has_started:
@@ -587,16 +605,19 @@ class Expedition(Scene):
                 if self.input.is_confirm_button_down():
                     context.scene.change(SCENE_CREDITS)
         
-        # Estado de partida ganada
+        # Estado de partida empatada
         elif self.state.is_current(STATE_TIES):
             # Al inicio, comenzar temporizador de 5 segundos
             if self.state.is_entering:
+                pygame.mixer.music.load(resources.music.TIE_THEME)
+                pygame.mixer.music.play(-1)
                 self.endgame_timer.start(5000)
             
             # Después de 5 segundos
             if self.endgame_timer.has_finished:
                 # Si el jugador confirma, ir al menú principal
                 if self.input.is_confirm_button_down():
+                    pygame.mixer.music.stop()
                     context.scene.change(SCENE_MAIN_MENU)
 
         # Si hay un turno activo y la partida no ha finalizado, poner la camara sobre el jugador activo

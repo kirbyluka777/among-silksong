@@ -13,10 +13,13 @@ class CreateTeam(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
         self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 
     def start(self, context: GameContext):
         screen = context.get_screen()
-
+        pygame.mixer.music.load(resources.music.REGISTER_THEME)
+        pygame.mixer.music.play(-1)
         # Crear botones
         self.button_back = Button(
             context,
@@ -26,7 +29,10 @@ class CreateTeam(Scene):
             active_color=resources.colors.RED,
             text='Back',
             action=lambda: context.scene.change(SCENE_MAIN_MENU),
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_registrar = Button(
             context,
             pos=(screen.get_width() // 2, screen.get_height() - 100),
@@ -35,7 +41,10 @@ class CreateTeam(Scene):
             active_color=resources.colors.RED,
             text='Registrar',
             action=self.register_team,
-            font=self.font)
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         
         # Crear cajas de entrada
         self.input_name = InputBox(
@@ -79,6 +88,7 @@ class CreateTeam(Scene):
         self.button_registrar.draw(screen)
             
     def exit(self, context: GameContext):
+        pygame.mixer.music.stop()
         pass
 
     def register_team(self):

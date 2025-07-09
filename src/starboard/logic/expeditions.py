@@ -17,6 +17,7 @@ def save_expedition(name1,name2,en_unit,difficulty,direction):
         file.write(struct.pack(EXPEDITION_FORMAT,EXP_ID,name1,name2,en_unit,difficulty,direction,date))
         EXP_ID = EXP_ID+1
         return EXP_ID
+    
 def read_expeditions():
     with open(EXPEDITION_FILE,'rb') as file:
         expeditions=[]
