@@ -80,7 +80,7 @@ class CreateTeam(Scene):
                                      ['#696969', '#ffffff'],
                                      ['#696969', '#ffffff'],
                                      400, 80,350,32,
-                                     pygame.font.Font(resources.fonts.BEACH_BALL, 18),
+                                     pygame.font.Font(resources.fonts.RETRO_GAMING, 18),
                                      'ODS',
                                      list(m for n,m in enumerate(globals.ods)))
         self.sel_country = None
@@ -155,15 +155,15 @@ class CreateTeam(Scene):
         email  = self.input_email.text
         password = self.input_password.text
 
-        if name and email and password and self.sel_country and self.sel_ods and not any(self.warning_flags):
+        if name and email and password and self.sel_country and self.sel_ods is not None and not any(self.warning_flags):
             team_id = increment_records_len(TEAM_FILE)
-            new_team = Team(team_id, name, email.strip(), password.strip(), self.sel_country.name, self.sel_ods)
+            new_team = Team(team_id, name, email.strip(), password.strip(), self.sel_country.code.strip(), self.sel_ods)
             globals.teams.append(new_team)
             teams.save_record(new_team)
             print(f'registrado: {new_team.name}\n'
                   f'correo: {new_team.email}\n'
-                  f'contrasena: {new_team.password}\'n'
-                  f'pais: {new_team.country_code}')
+                  f'contrasena: {new_team.password}\n'
+                  f'pais: {new_team.country_code, self.sel_country.name}')
             self.input_name.text = self.input_email.text = self.input_password.text = ''
             for box in self.input_boxes:
                 box.txt_surface = pygame.font.SysFont(None, 32).render(box.text, True, box.color)

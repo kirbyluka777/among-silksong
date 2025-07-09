@@ -14,8 +14,9 @@ def search_c() -> bool:
             if km_total > 0:
                 km_total_sort = str(km_total).rjust(20, "0")
                 entries += f"{km_total_sort:<20}{expedition.id:<8} | {team.name:<20} | {country.name:<20} | {km_total*1000:>12} km\n"
-    
     entries = quicksort(entries.split("\n"))
+    if len(entries)<10:
+        return False
 
     file = open('reports/Reporte_c.txt', 'w', encoding="utf-8")
 

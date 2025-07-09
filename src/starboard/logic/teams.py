@@ -108,7 +108,7 @@ def search_team(id):
     if not os.path.isfile(TEAM_FILE):
         return None
     teams_len = records.get_records_len(TEAM_FILE)
-    if id < 0 or id > teams_len:
+    if id <= 0 or id > teams_len:
         print("id < 0 or id > max len")
         return None
     
