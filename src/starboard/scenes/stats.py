@@ -12,7 +12,7 @@ BOX_HEIGHT = 32
 class Stats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.font = pygame.font.Font(resources.fonts.COINY, 24)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 
@@ -22,7 +22,7 @@ class Stats(Scene):
         pygame.mixer.music.play(-1)
         self.text = Text(
             context,
-            text="Seleccione la opcion que desee ver",
+            text="Seleccione la opción que desee ver",
             pos=(400,100),
             dim=(140,32),
             font=self.font)
@@ -32,7 +32,7 @@ class Stats(Scene):
             dim=(140,70),
             inactive_color="white",
             active_color=resources.colors.RED,
-            text='Mejor expedicion de un pais',
+            text='Mejor expedición de un país',
             action=lambda: context.scene.change(SCENE_STATS_BEST),
             font=self.font,
             sound_sel=self.button_sound_sel,
@@ -68,7 +68,7 @@ class Stats(Scene):
             dim=(140,32),
             inactive_color="white",
             active_color=resources.colors.RED,
-            text='Back',
+            text='Atras',
             action=lambda: context.scene.change(SCENE_MAIN_MENU),
             font=self.font,
             sound_sel=self.button_sound_sel,

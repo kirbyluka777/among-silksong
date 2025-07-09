@@ -14,7 +14,7 @@ BOX_HEIGHT = 32
 class CreateTeam(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+        self.font = pygame.font.Font(resources.fonts.COINY, 24)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 

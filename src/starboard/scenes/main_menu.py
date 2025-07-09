@@ -6,7 +6,7 @@ from .. import resources
 class MainMenu(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = Font(resources.fonts.BEACH_BALL, 40)
+        self.font = Font(resources.fonts.COINY, 40)
         self.title_text = self.font.render(resources.locale.GAME_TITLE, True, "white")
         self.menu_theme = pygame.mixer.music
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
@@ -49,7 +49,7 @@ class MainMenu(Scene):
             dim=(200,50),
             inactive_color="white",
             active_color=resources.colors.BRIGHT_GREEN,
-            text='Estadisticas',
+            text='Estadísticas',
             action=lambda: context.scene.change(SCENE_STATS),
             font=self.font,
             sound_sel=self.button_sound_sel,
@@ -61,7 +61,7 @@ class MainMenu(Scene):
             dim=(200, 70),
             inactive_color="white",
             active_color=resources.colors.BRIGHT_GREEN,
-            text='OPCIONES',
+            text='Opciones',
             action=lambda: context.scene.change(SCENE_OPTIONS),
             font=self.font,
             sound_sel=self.button_sound_sel,
@@ -73,7 +73,7 @@ class MainMenu(Scene):
             dim=(200, 70),
             inactive_color=resources.colors.RED,
             active_color=resources.colors.BRIGHT_RED,
-            text="QUIT",
+            text="Salir",
             action=lambda: context.quit(),
             font=self.font,
             sound_sel=self.button_sound_sel,

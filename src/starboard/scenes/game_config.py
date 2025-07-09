@@ -7,7 +7,7 @@ from ..inputs import PlayerInput
 class GameConfig(Scene):
     def load(self, context):
         self.bg = pygame.image.load(resources.images.DIFFICULTY_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.font = pygame.font.Font(resources.fonts.COINY, 40)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 

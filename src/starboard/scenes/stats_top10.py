@@ -10,7 +10,7 @@ BOX_HEIGHT = 32
 class Top10Stats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+        self.font = pygame.font.Font(resources.fonts.COINY, 24)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
         self.success_text = self.font.render(resources.locale.REPORT_SUCCESS_MSG, True, "white")
@@ -32,7 +32,7 @@ class Top10Stats(Scene):
             dim=(140,32),
             inactive_color="white",
             active_color=resources.colors.RED,
-            text='Back',
+            text='Atras',
             action=lambda: context.scene.change(SCENE_STATS),
             font=self.font,
             sound_sel=self.button_sound_sel,

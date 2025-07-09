@@ -13,7 +13,7 @@ BOX_HEIGHT = 32
 class BestStats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+        self.font = pygame.font.Font(resources.fonts.COINY, 24)
         self.report_text = None
         self.report_font = pygame.font.SysFont("Courier New", 18)
         self.not_found_text = self.font.render("País no encontrado", True, "white")
@@ -30,7 +30,7 @@ class BestStats(Scene):
         self.report_text = None
         self.text = Text(
             context,
-            text="Ingrese el codigo de un pais para ver su mejor recorrido",
+            text="Ingrese el código de un país para ver su mejor recorrido",
             pos=(400,100),
             dim=(140,32),
             font=self.font)
@@ -38,7 +38,7 @@ class BestStats(Scene):
             context,
             pos=(100, 200),
             dim=(BOX_WIDTH, BOX_HEIGHT),
-            head='Codigo de Pais',
+            head='Código de País',
             font=self.font)
         self.button_back = Button(
             context,
@@ -46,7 +46,7 @@ class BestStats(Scene):
             dim=(140,32),
             inactive_color="white",
             active_color=resources.colors.RED,
-            text='Back',
+            text='Atras',
             action=lambda: context.scene.change(SCENE_STATS),
             font=self.font,
             sound_sel=self.button_sound_sel,

@@ -12,7 +12,7 @@ BOX_HEIGHT = 32
 class Options(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.font = pygame.font.Font(resources.fonts.COINY, 40)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
 
@@ -40,7 +40,7 @@ class Options(Scene):
             dim=(140,32),
             inactive_color="white",
             active_color=resources.colors.RED,
-            text='Registrar pais',
+            text='Registrar país',
             action=self.toggle_countries,
             font=self.font,
             sound_sel=self.button_sound_sel,
@@ -64,7 +64,7 @@ class Options(Scene):
             dim=(140,32),
             inactive_color="white",
             active_color=resources.colors.RED,
-            text='Back',
+            text='Atras',
             action=lambda: context.scene.change(SCENE_MAIN_MENU),
             font=self.font,
             sound_sel=self.button_sound_sel,
@@ -76,7 +76,7 @@ class Options(Scene):
             context=context,
             pos=(screen.get_width() // 2 - 200,350),
             dim=(BOX_WIDTH, BOX_HEIGHT),
-            head='Codigo',
+            head='Código',
             font=self.font)
         self.input_name = InputBox(
             context=context,
