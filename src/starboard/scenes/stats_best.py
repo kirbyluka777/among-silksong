@@ -1,5 +1,5 @@
 from engine import *
-from engine.controllers.ui import Button, InputBox, Text
+from engine.controllers.ui import Button, InputBox, Text, InterfaceController
 from ..constants import *
 from .. import resources
 from ..logic import countries
@@ -13,11 +13,14 @@ BOX_HEIGHT = 32
 class BestStats(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 40)
+        self.font = pygame.font.Font(resources.fonts.BEACH_BALL, 24)
+        self.not_found_text = self.font.render("País no encontrado", True, "white")
+        self.no_data_text = self.font.render("No hay datos para este país", True, "white")
 
     def start(self, context: GameContext):
         screen = context.get_screen()
-        self.not_found = False
+        self.interface = InterfaceController(context)
+        self.search_tried = False
         self.show_data = False
         self.report_text = None
         self.text = Text(
@@ -43,12 +46,12 @@ class BestStats(Scene):
             font=self.font)
         self.button_search = Button(
             context,
-            pos=(250,200),
+            pos=(1000,200),
             dim=(100,32),
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Buscar',
-            action=self.search(self.input_id.text),
+            action=lambda: self.search(self.input_id.text),
             font=self.font)
 
     def update(self, context: GameContext):
@@ -58,22 +61,36 @@ class BestStats(Scene):
     
     def draw(self, context: GameContext):
         screen = context.get_screen()
+        screen_rect = context.get_screen_rect()
         screen.fill("white")
         screen.blit(self.img_bg,(0,0))
         self.input_id.draw(screen)
         self.button_back.draw(screen)
         self.button_search.draw(screen)
         self.text.draw(screen)
+        if self.search_tried and not self.report_text:
+            self.interface.draw_surface(self.not_found_text)
+        elif self.report_text is not None and len(self.report_text) == 0:
+            self.interface.draw_surface(self.no_data_text)
+        elif self.report_text:
+            for i in range(0, len(self.report_text), +1):
+                self.interface.draw_surface(self.report_text[i], (screen_rect.centerx - 500, screen_rect.centery - 100 + 30 * i), anchor=anchors.leftmiddle)
             
     def exit(self, context: GameContext):
         pass
 
     def search(self, code: str):
+        self.search_tried = False
+
+        if not code:
+            self.report_text = None
+            return
+
         country = countries.search_country_by_code(code)
 
         if not country:
-            self.show_data = False
-            self.not_found = True
+            self.report_text = None
+            self.search_tried = True
             return
 
         report = ""
@@ -93,10 +110,11 @@ class BestStats(Scene):
                         if km > longest:
                             longest = km
                             expedition_detail = current_detail
-                longest_str = f"{longest} km"
-                report += f"{team.name:<20} | {longest_str:>12} | {expedition_detail}\n"
+                if longest:
+                    longest_str = f"{longest} km"
+                    report += f"{team.name:<20} | {longest_str:>12} | {expedition_detail}\n"
 
-        print(report)
+        self.report_text = [self.font.render(line, True, "white") for line in report.split("\n")] if report else []
 
 def get_expedition_detail_as_str(expedition: expeditions.Expedition):
     dir = "Horario" if expedition.board_dir == BOARD_DIR_OCLOCK else "Antihorario"

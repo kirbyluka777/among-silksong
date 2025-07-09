@@ -149,6 +149,5 @@ def search_country_by_code(code: str):
         elif indices[mid][0] > code:
             right = mid - 1
         else:
-            print(indices[mid])
             return get_country_at(indices[mid][1])
     return None

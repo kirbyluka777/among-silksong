@@ -1,6 +1,6 @@
+from . import records
 import os
 import struct
-from . import records
         
 TEAM_FILE = 'data\\equipos.bin'
 TEAM_FORMAT = 'i20s50s8s3s'
@@ -33,21 +33,23 @@ def load_records() -> list[Team]:
     if not os.path.isfile(TEAM_FILE):
         return []
     teams_len = records.get_records_len(TEAM_FILE)
-    equipos = [None for _ in teams_len]
+    equipos = [None for _ in range(teams_len)]
     i = 0
     file = open(TEAM_FILE, 'rb')
+    file.seek(4)
     while True:
         bytes = file.read(TEAM_SIZE)
         if not bytes:
             file.close()
             return equipos
-        id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+        id, name, email, password, country_code = struct.unpack(TEAM_FORMAT, bytes)
         name = name.decode('utf-8').strip('\x00')
         email = email.decode('utf-8').strip('\x00')
         password = password.decode('utf-8').strip('\x00')
-        country_code = password.decode('utf-8').strip('\x00')
+        country_code = country_code.decode('utf-8').strip('\x00')
 
         equipos[i] = Team(id, name, email, password, country_code)
+        i += 1
 
 def XOR_Encrypt(text, key):
     return ' '.join(str(ord(c) ^ int(key)) for c in text)

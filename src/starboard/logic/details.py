@@ -68,11 +68,12 @@ def read_details(id):
             player_id, cell_type, consequence = struct.unpack(DETAILS_CELL_VISIT_FORMAT, bytes)
             consequence = consequence.decode('utf-8').strip('\x00')
             details[i] = CellVisitEvent(player_id, cell_type, consequence)
+        i += 1
 
-def get_total_km_from_expedition(expedition_id):
+def get_total_km_from_expedition(expedition_id, turn):
     km = 0
     for detail in read_details(expedition_id):
-        if isinstance(detail, MoveEvent):
+        if isinstance(detail, MoveEvent) and detail.player_id == turn:
             km = detail.steps
     return km
 
