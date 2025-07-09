@@ -3,44 +3,51 @@ import struct
 from . import records
         
 TEAM_FILE = 'data\\equipos.bin'
-TEAM_FORMAT = 'i20s50s8s'
+TEAM_FORMAT = 'i20s50s8s3s'
 TEAM_SIZE = struct.calcsize(TEAM_FORMAT)
 
 class Team:
-    def __init__(self, id, name, email, password):#, country, ods
+    def __init__(self, id, name, email, password, country_code):#, country, ods
         self.id = id
         self.name = name # 20 caracteres
         self.email = email # 
         self.password = password
+        self.country_code = country_code
 
 def save_record(data:Team):
-    with open(TEAM_FILE, 'ab') as file:
-        id = data.id
-        name = data.name.encode('utf-8')
-        email = data.email.encode('utf-8')
-        password = data.password.encode('utf-8')
+    file = open(TEAM_FILE, 'ab'):
 
-        packed_data = struct.pack(TEAM_FORMAT, id, name, email, password)
+    id = data.id
+    name = data.name.encode('utf-8')
+    email = data.email.encode('utf-8')
+    password = data.password.encode('utf-8')
+    country_code = data.country_code.encode('utf-8')
 
-        file.write(packed_data)
+    packed_data = struct.pack(TEAM_FORMAT, id, name, email, password, country_code)
 
-def load_records(game):
+    file.write(packed_data)
+
+    file.close()
+
+def load_records() -> list[Team]:
     if not os.path.isfile(TEAM_FILE):
         return []
     teams_len = records.get_records_len(TEAM_FILE)
     equipos = [None for _ in teams_len]
     i = 0
-    with open(TEAM_FILE, 'rb') as file:
-        while True:
-            bytes = file.read(TEAM_SIZE)
-            if not bytes:
-                return equipos
-            id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
-            name = name.decode('utf-8').strip('\x00')
-            email = email.decode('utf-8').strip('\x00')
-            password = password.decode('utf-8').strip('\x00')
+    file = open(TEAM_FILE, 'rb')
+    while True:
+        bytes = file.read(TEAM_SIZE)
+        if not bytes:
+            file.close()
+            return equipos
+        id, name, email, password = struct.unpack(TEAM_FORMAT, bytes)
+        name = name.decode('utf-8').strip('\x00')
+        email = email.decode('utf-8').strip('\x00')
+        password = password.decode('utf-8').strip('\x00')
+        country_code = password.decode('utf-8').strip('\x00')
 
-            equipos[i] = Team(id, name, email, password)
+        equipos[i] = Team(id, name, email, password, country_code)
 
 def XOR_Encrypt(text, key):
     return ' '.join(str(ord(c) ^ int(key)) for c in text)
