@@ -42,3 +42,5 @@ CELL_OBSTACLE_SOLAR_RAD = image("cell/obstacle/solar_rad.png")
 
 KEY_ICON_Z = image("keys/Z.png")
 KEY_ICON_M = image("keys/M.png")
+
+ODS_CARDS = [[image(f"ods/{i+1}.{j+1}.png") for j in range(3)] for i in range(17)]

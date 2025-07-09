@@ -5,9 +5,9 @@
   - [ ] A cada equipo también se le debe asociar un ODS. Ejemplo; Orión – Energía Asequible y Limpia y los astronautas que lo conforman.
   - [ ] El nombre del equipo no podrá existir más de una vez.
   - [-] La clave de acceso debe crearse cumpliendo los siguientes criterios:
-    - [-] Debe poseer entre 6 y 10 caracteres.
-    - [-] Ser una combinación de letras en mayúscula y minúscula (sin acento y sin la letra Ñ o ñ), números y caracteres especiales.
-    - [-] Los caracteres especiales permitidos son: el asterisco (*), el igual (=), el numeral (#) o el guión bajo ( _ ).
+    - [x] Debe poseer entre 6 y 10 caracteres.
+    - [x] Ser una combinación de letras en mayúscula y minúscula (sin acento y sin la letra Ñ o ñ), números y caracteres especiales.
+    - [x] Los caracteres especiales permitidos son: el asterisco (*), el igual (=), el numeral (#) o el guión bajo ( _ ).
     - [-] No debe contener el mismo carácter más de dos veces de forma consecutiva. Por ejemplo, no está permitido: aaa, 222, ***
     - [-] IMPORTANTE : La aplicación debe informar sobre los criterios para la creación de la clave e igualmente debe ir indicando cuales de los criterios no se cumplen al momento de crear la clave, para orientar al usuario sobre su creación.
   - [-] Para la generación de la clave debe utilizar algoritmos recursivos.
@@ -15,7 +15,7 @@
   - [x] Se debe mantener un registro de los países que pueden realizar este tipo de expediciones, con códigos únicos y nombres. Ejemplo : USA : Estados Unidos de Norteamérica, RUS : Rusia, etc, a esta lista se le podrían incorporar nuevos países.
   - [-] La información de los equipos (identificador, clave, país al que pertenecen, ODS asociado, etc), se deben almacenar en estructuras de almacenamiento permanentes (archivos).
 
-- [ ] Sobre el juego:
+- [x] Sobre el juego:
   - [x] Podrán participar 2 equipos (cada uno controlando a un astronauta).
   - [x] Cada juego que se inicie, representará una expedición o viaje estelar, el cual debe quedar identificado con un código único.
   - [x] El juego se desarrollará en un mapa estelar de N x N sectores, donde N es un número impar entre 5 y 19 inclusive.
@@ -29,7 +29,7 @@
     - [x] Básico           10                                       20
     - [x] Medio            15                                       15
     - [x] Avanzado         20                                       10
-  - [ ] Cada jugador seleccionará a un equipo con el que hará la expedición (para ello debe estar registrados). Cada equipo tendrá asociado un ODS desde su inicio (ejemplo: Orión - Energía Asequible y Limpia). La aplicación, debe permitir la incorporación de nuevos equipos y asociales su ODS.
+  - [x] Cada jugador seleccionará a un equipo con el que hará la expedición (para ello debe estar registrados). Cada equipo tendrá asociado un ODS desde su inicio (ejemplo: Orión - Energía Asequible y Limpia). La aplicación, debe permitir la incorporación de nuevos equipos y asociales su ODS.
   - [x] Cada sector del mapa se debe identificar con un número consecutivo (1,2, …) en el mapa, que indicará el recorrido en espiral.
   - [x] El recorrido lo iniciará el equipo que obtenga el mayor número, entre un par de números aleatorios generados uno por cada equipo, al comienzo del juego.
   - [x] El mapa se recorrerá en forma de espiral, en sentido horario o sentido antihorario, opción que debe escogerse antes de iniciar el juego.
@@ -58,22 +58,22 @@
   - [-] Antes del juego, los equipos deben registrarse (si no lo están) y elegir el sentido del recorrido (horario o antihorario), asignar las unidades de energía iniciales para cada nave y seleccionar el nivel de dificultad del viaje (básico, medio, avanzado).
   - [x] Registrar en un archivo llamado EXPEDICIONES ESPACIALES, los datos básicos del viaje, entre los cuales están : el identificador de la expedición(código único que identificará el viaje), los nombre de los equipos que lo realizan, las unidades de energías asignadas inicialmente, el nivel de dificultad de la expedición, el sentido del recorrido del mapa (horario o antihorario) y la fecha de la expedición.
   - [x] Durante el juego, se mostrará la información de los equipos o naves espaciales (nombre y ODS asociado), el resultado de cada "activación de propulsores", así como las unidades de energía que le van quedando disponibles a cada equipo.
-  - [ ] Durante todo el juego, se debe presentar, a modo de espónsor, las imágenes de ODS y acciones alusivos a cada uno de estos, durante cada desplazamiento de las naves.
+  - [x] Durante todo el juego, se debe presentar, a modo de espónsor, las imágenes de ODS y acciones alusivos a cada uno de estos, durante cada desplazamiento de las naves.
   - [x] Durante el viaje, se debe ir almacenando, en un archivo que pudiera llamarse DETALLE DE VIAJE, los movimientos realizado por cada uno de las naves y los eventos ocurridos durante el viaje. Almacenando entre otros datos: el Código del viaje, Nombre del Equipo, Fecha y Hora de la actividad, Unidades de Propulsión, Tipo de ayuda u obstáculo encontrado, la consecuencia generada, distancia en miles de kilómetros del sector en el que arriba la nave (este dato viene dado por el número consecutivo con el que se identifica cada sector).
   - [x] Identificar (con imágenes) en el mapa estelar, la existencia de alguna estación espacial o de alguna anomalía espacial.
   - [x] Proponer su propio diseño del mapa estelar, sean creativos.
 
 - [ ] Reportes:
   - [ ] A partir de los datos almacenados en los archivos EQUIPOS, EXPEDICIONES ESPACIALES y DETALLE DE VIAJES , se pide :
-  - [-] a) Dado el identificador de un país en particular, presentar por pantalla el mayor recorrido alcanzado por alguna de sus naves, así mismo mostrar el detalle de las expediciones donde se lograron estos recorridos. Para ello utilizar un método de búsqueda binario.
-  - [ ] b) Elaborar un reporte, que muestre los datos básicos de un equipo en particular, dado su identificador y que muestre las expediciones en los que ha participado y la cantidad de kilometrajes obtenidos. Utilice alguno de los métodos de búsqueda.
+  - [x] a) Dado el identificador de un país en particular, presentar por pantalla el mayor recorrido alcanzado por alguna de sus naves, así mismo mostrar el detalle de las expediciones donde se lograron estos recorridos. Para ello utilizar un método de búsqueda binario.
+  - [x] b) Elaborar un reporte, que muestre los datos básicos de un equipo en particular, dado su identificador y que muestre las expediciones en los que ha participado y la cantidad de kilometrajes obtenidos. Utilice alguno de los métodos de búsqueda.
   - [ ] c) Hacer un reporte que muestre el TOP 10, de las expediciones con mayor kilometraje recorrido, presentando el identificador del viaje, el nombre del equipo que lo hizo, el pais de procedencia y total de kilómetros recorrido, para ello utilizar el método de ordenamiento Quicksort
 
 - [ ] Algunas recomendaciones para la construcción de la aplicación:
   - [x] Utilizar menú intuitivo que permita acceder a cada una de las opciones que ofrece el sistema, para la realización de un juego.
   - [-] Desarrollar la aplicación en el lenguaje Python. No todas las funcionalidades están permitidas. Estas deben ser consultadas con el profesor. Por ejemplo, NO está permitido usar funciones de búsqueda y ordenamiento provista por el lenguaje, sino que generen sus propios algoritmos de búsquedas y ordenamientos, así mismo el manejo de exploración de cadenas.
   - [x] Puede utilizar cualquier desarrollador de interfaz compatible con Python, que le permita la construcción de una interfaz amigable, intuitiva y atractiva para los jugadores. Sea creativo.
-  - [ ] No olvidar incorporar los elementos de ODS, solicitados.
+  - [x] No olvidar incorporar los elementos de ODS, solicitados.
 
 - [ ] Ideas nosotros:
   - [x] Mensaje de consecuencia al caer en obstaculo/estación

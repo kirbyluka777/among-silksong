@@ -7,12 +7,13 @@ TEAM_FORMAT = 'i20s50s8s3s'
 TEAM_SIZE = struct.calcsize(TEAM_FORMAT)
 
 class Team:
-    def __init__(self, id, name, email, password, country_code):#, country, ods
+    def __init__(self, id, name, email, password, country_code, ods = 1):#, country, ods
         self.id = id
         self.name = name # 20 caracteres
         self.email = email # 
         self.password = password
         self.country_code = country_code
+        self.ods = ods
 
 def save_record(data:Team):
     file = open(TEAM_FILE, 'ab')
