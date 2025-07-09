@@ -15,8 +15,6 @@ def search_c() -> bool:
                 km_total_sort = str(km_total).rjust(20, "0")
                 entries += f"{km_total_sort:<20}{expedition.id:<8} | {team.name:<20} | {country.name:<20} | {km_total*1000:>12} km\n"
     entries = quicksort(entries.split("\n"))
-    if len(entries)<10:
-        return False
 
     file = open('reports/Reporte_c.txt', 'w', encoding="utf-8")
 
@@ -28,7 +26,7 @@ def search_c() -> bool:
                f"{dash*72}\n")
     
     base_index = len(entries) - 1
-    for i in range(0, 10, +1):
+    for i in range(0, min(10, len(entries)), +1):
         entry = entries[base_index - i][20:]
         file.write(f"{entry}\n")
     

@@ -434,7 +434,7 @@ class Expedition(Scene):
             # Inicializar estado y temporizador
             if self.state.is_entering:
                 self.move_action_sound.play(-1)
-                self.target_ods = self.img_ods_cards[self.teams[self.turn].ods - 1][random.randint(0, 2)]
+                self.target_ods = self.img_ods_cards[self.teams[self.turn].ods][random.randint(0, 2)]
                 self.action_anim_timer.start(500)
             
             # Si hay pasos por realizar y el temporizador terminó

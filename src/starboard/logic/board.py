@@ -48,10 +48,10 @@ def spiral_traversal(board: Board, pos: Positioning, steps: int):
                 pos.row -= 1
     elif steps < 0:
         for i in range(abs(steps)):
-            if pos.dir == MOVE_DIR_RIGHT and pos.col <= pos.hturns // 2 - 1:
+            if pos.dir == MOVE_DIR_RIGHT and pos.col <= pos.hturns // 2 - (1 if board.dir == BOARD_DIR_OCLOCK else 0):
                 pos.hturns -= 1
                 pos.dir = MOVE_DIR_UP if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_DOWN
-            elif pos.dir == MOVE_DIR_LEFT and pos.col >= board.size - pos.hturns // 2 - 1:
+            elif pos.dir == MOVE_DIR_LEFT and pos.col >= board.size - pos.hturns // 2 - (1 if board.dir == BOARD_DIR_OCLOCK else 0):
                 pos.hturns -= 1
                 pos.dir = MOVE_DIR_DOWN if board.dir == BOARD_DIR_OCLOCK else MOVE_DIR_UP
             elif pos.dir == MOVE_DIR_DOWN and pos.row <= pos.vturns // 2:

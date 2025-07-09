@@ -45,7 +45,7 @@ class Top10Stats(Scene):
             inactive_color="white",
             active_color=resources.colors.RED,
             text='Generar Reporte',
-            action=self.id_input,
+            action=lambda: self.id_input(),
             font=self.font,
             sound_sel=self.button_sound_sel,
             sound_press=self.button_sound_pressed,
