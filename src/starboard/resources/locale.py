@@ -65,6 +65,7 @@ STATE_END_OF_TURN_MSG = "Fin de turno!"
 STATE_MINIGAME_MSG = "Es hora de jugar!"
 STATE_WIN_MSG = "Tenemos un ganador!"
 STATE_TIES_MSG = "Será para la próxima..."
+STATE_PAUSE_MSG = "Pausa"
 
 INTRO_MSG = [
     "Dos equipos, conformados por varios astronautas,\n"

@@ -5,11 +5,26 @@ from .. import resources
 from ..inputs import PlayerInput
 from ..menu.box import DropDown
 from ..logic.teams import Team
+from engine.controllers.ui import Button
 
 class GameConfig(Scene):
     def load(self, context):
         self.bg = pygame.image.load(resources.images.DIFFICULTY_BG)
         self.font = pygame.font.Font(resources.fonts.COINY, 40)
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
+        self.button_back = Button(
+            context,
+            pos=(100,context.get_screen().get_height() - 100), 
+            dim=(140,32),
+            inactive_color="white",
+            active_color=resources.colors.RED,
+            text='Back',
+            action=lambda: context.scene.change(SCENE_MAIN_MENU),
+            font=self.font,
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
         self.teams1 = DropDown(["#696969", "#ffffff"],["#696969","#ffffff"], 100, 100, 150, 40,pygame.font.SysFont(None,32),
@@ -34,7 +49,7 @@ class GameConfig(Scene):
         events = context.get_events()
         self.selected_team1 = self.teams1.update(events)
         self.selected_team2 = self.teams2.update(events)
-        
+        self.button_back.update()
         if self.selected_team1 >=0:
             new_team = globals.teams[self.selected_team1]
             if new_team == globals.team2:
@@ -95,6 +110,7 @@ class GameConfig(Scene):
 
         self.teams1.draw(screen)
         self.teams2.draw(screen)
+        self.button_back.draw(screen)
         self.text_difficulty = self.font.render(f"Dificultad: {'facil' if self.difficulty == 0 else 'intermedio' if self.difficulty == 1 else 'avanzado'}", True, '#ffffff')
         self.text_size = self.font.render(f'Tamaño del mapa: {5 + self.board_size * 2}', True, '#ffffff')
         self.text_dir = self.font.render(f'Sentido: {"Horario" if self.board_dir == BOARD_DIR_OCLOCK else "Antihorario"}', True, '#ffffff')

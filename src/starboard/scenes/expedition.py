@@ -9,6 +9,7 @@ from ..logic.teams import Team
 from ..logic.items import Item
 from ..logic import expeditions
 from ..logic import details
+from engine.controllers.ui import Button
 
 STATE_DRAFT = 0
 STATE_STRATEGY = 1
@@ -22,6 +23,7 @@ STATE_END_OF_TURN = 8
 STATE_MINIGAME = 9
 STATE_WIN = 10
 STATE_TIES = 11
+STATE_PAUSE = 12
 
 TURN_PLAYER_ONE = 0
 TURN_PLAYER_TWO = 1
@@ -39,7 +41,21 @@ class Expedition(Scene):
     def load(self, context: GameContext):
         # get from context
         screen_rect = context.get_screen_rect()
-
+        self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
+        self.button_back = Button(
+            context=context,
+            pos=(context.get_screen().get_width()//2 - 100,context.get_screen().get_height() //2),
+            dim=(140,32),
+            inactive_color="white",
+            active_color=resources.colors.RED,
+            text='Menu',
+            action=lambda: context.scene.change(SCENE_MAIN_MENU),
+            font=pygame.font.Font(None,40),
+            sound_sel=self.button_sound_sel,
+            sound_press=self.button_sound_pressed,
+            flag=True)
+        
         self.team_spaceship_img = [pygame.image.load(resources.images.SPACESHIP) for i in range(PLAYER_COUNT)]
         self.team_spaceship_img[TURN_PLAYER_ONE].fill("red", special_flags=pygame.BLEND_ADD)
         self.team_spaceship_img[TURN_PLAYER_TWO].fill("blue", special_flags=pygame.BLEND_ADD)
@@ -165,6 +181,7 @@ class Expedition(Scene):
             self.menu_font.render(resources.locale.STATE_MINIGAME_MSG, True, resources.colors.ui_text_primary),
             self.menu_font.render(resources.locale.STATE_WIN_MSG, True, resources.colors.ui_text_primary),
             self.menu_font.render(resources.locale.STATE_TIES_MSG, True, resources.colors.ui_text_primary),
+            self.menu_font.render(resources.locale.STATE_PAUSE_MSG, True, resources.colors.ui_text_primary)
         ]
 
         self.text_indices = [self.menu_font.render(str(i + 1), True, "white") for i in range(globals.board_size**2)]
@@ -312,6 +329,8 @@ class Expedition(Scene):
             # Si puede realizar una acción
             if not self.disabled[self.turn] or self.energy[self.turn] > 0:
                 # Cambiar entre las opciones disponibles en el menú
+                if self.input.is_cancel_button_down():
+                    self.state.transition_to(STATE_PAUSE)
                 if self.input.is_up_button_down():
                     self.option_selected = (self.option_selected - 1) % STRATEGY_OPTIONS
                 elif self.input.is_down_button_down():
@@ -625,6 +644,13 @@ class Expedition(Scene):
                     pygame.mixer.music.stop()
                     context.scene.change(SCENE_MAIN_MENU)
 
+        elif self.state.is_current(STATE_PAUSE):
+            if self.state.is_entering:
+                pygame.mixer.music.stop()
+            self.button_back.update()
+            if self.input.is_cancel_button_down():
+                self.state.transition_to(STATE_STRATEGY)
+
         # Si hay un turno activo y la partida no ha finalizado, poner la camara sobre el jugador activo
         if self.turn is not None and not self.state.is_current(STATE_WIN) and not self.state.is_current(STATE_TIES):
             self.current_player_pos = self.position[self.turn]
@@ -844,6 +870,9 @@ class Expedition(Scene):
             screen.blit(self.img_ties, (screen_rect.centerx - self.img_ties.get_width() // 2, screen_rect.centery - self.img_ties.get_height() // 2))
             pygame.draw.rect(screen, "white", (screen_rect.centerx - self.text_ties.get_width() // 2 - 10, screen_rect.centery - self.img_ties.get_height() // 2 - 54, self.text_ties.get_width() + 20, 32), border_radius=10)
             screen.blit(self.text_ties, (screen_rect.centerx - self.text_ties.get_width() // 2, screen_rect.centery - self.img_ties.get_height() // 2 - 50))
+        if self.state.is_current(STATE_PAUSE):
+            screen.blit(self.img_dark_overlay, (0, 0))
+            self.button_back.draw(screen)
 
         # Dibujar indicador de estado
         state_text = self.text_state[self.state.current_state]
