@@ -12,7 +12,8 @@ DRAFT_TO_PLAYER_FMT = "Le toca a {0}!"
 REPEAT_DRAFT = "Vuelvan a lanzar!"
 CONGRATULATIONS_TO_PLAYER_FMT = "Felicitaciones, {0}!"
 TIES_MSG = "Todos los jugadores se quedaron sin energía..."
-REPORT_SUCCESS_MSG = "El reporte fue generado éxitosamente!"
+REPORT_SUCCESS_MSG = "El reporte fue generado exitosamente!"
+NOT_REGISTERED_WARNING = "No registrado... Verifique que ha introducido correctamente todos los campos."
 
 SKIPPED_TURN = "Este turno será omitido"
 NOT_ENOUGH_ENERGY = "No tienes suficiente energía"
@@ -24,7 +25,7 @@ CELL_STATION_ASGARD_NAME = "Asgard"
 CELL_STATION_XANDAR_NAME = "Xandar"
 
 CELL_STATION_TITAN_DESCRIPTION = "Recargarás 10 unidades de energía"
-CELL_STATION_SAKAAR_DESCRIPTION = "Avanzarás al sector más cercano desocupado"
+CELL_STATION_SAKAAR_DESCRIPTION = "Avanzarás al sector desocupado más cercano"
 CELL_STATION_EGO_DESCRIPTION = "Tendrás otra oportunidad de activar propulsores"
 CELL_STATION_ASGARD_DESCRIPTION = "Obtendrás inmunidad a la siguiente anomalia espacial"
 CELL_STATION_XANDAR_DESCRIPTION = "Avanzarás a la estación espacial más cercana ubicada en la diagonal principal del mapa"
@@ -41,11 +42,11 @@ CELL_OBSTACLE_ASTEROID_NAME = "Impacto de Asteroide"
 CELL_OBSTACLE_COSMIC_RAD_NAME = "Radiación Cósmica"
 CELL_OBSTACLE_SOLAR_RAD_NAME = "Radiación Solar"
 
-CELL_OBSTACLE_DEBRIS_DESCRIPTION = "Retrocederás al sector más cercano desocupado"
+CELL_OBSTACLE_DEBRIS_DESCRIPTION = "Retrocederás al sector desocupado más cercano"
 CELL_OBSTACLE_METEORITE_DESCRIPTION = "Perdiste un turno"
 CELL_OBSTACLE_ASTEROID_DESCRIPTION = "Perderás 3 unidades de energía"
-CELL_OBSTACLE_COSMIC_RAD_DESCRIPTION = "Perderás 2 unidad de energía"
-CELL_OBSTACLE_SOLAR_RAD_DESCRIPTION = "Retrocederás al sector espacial mas cercano ubicado en la diagonal secundaria del mapa"
+CELL_OBSTACLE_COSMIC_RAD_DESCRIPTION = "Perderás 2 unidades de energía"
+CELL_OBSTACLE_SOLAR_RAD_DESCRIPTION = "Retrocederás al sector espacial más cercano ubicado en la diagonal secundaria del mapa"
 
 CELL_OBSTACLE_DESC = [CELL_OBSTACLE_DEBRIS_DESCRIPTION,
                       CELL_OBSTACLE_METEORITE_DESCRIPTION,
@@ -101,7 +102,7 @@ CREDITS = [
     "Alfonso Suarez",
     "Muchas gracias, Prof. Franklin!",
     "Gracias, a las ODS...",
-    "Universidad Católica de Andres Bello",
+    "Universidad Católica Andrés Bello",
     "Y nadie más...",
     "Gemini?",
     "Nah, mentira...",

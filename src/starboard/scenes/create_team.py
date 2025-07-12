@@ -1,5 +1,5 @@
 from engine import *
-from engine.controllers.ui import Button, InputBox, DropDown
+from engine.controllers.ui import Button, InputBox, DropDown, InterfaceController
 from ..constants import *
 from .. import resources
 from .. import globals
@@ -18,11 +18,33 @@ class CreateTeam(Scene):
         self.font = pygame.font.Font(resources.fonts.COINY, 24)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
+        self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
+
+        self.warnings = ["La contraseña debe tener entre 6 y 10 caracteres",
+                         "La contraseña solo puede tener *,-,_,#.",
+                         "La contraseña debe tener números",
+                         "La contraseña debe tener letras minúsculas",
+                         "La contraseña debe tener letras mayúsculas",
+                         "La contraseña debe tener carácteres especiales",
+                         "La contraseña posee 3 caracteres repetidos de manera secuencial"]
+        self.warning_flags = [False for _ in range(7)]
+
+        self.warnings_text = [self.font.render(self.warnings[0], True, '#ffffff'),
+                              self.font.render(self.warnings[1], True, '#ffffff'),
+                              self.font.render(self.warnings[2], True, '#ffffff'),
+                              self.font.render(self.warnings[3], True, '#ffffff'),
+                              self.font.render(self.warnings[4], True, '#ffffff'),
+                              self.font.render(self.warnings[5], True, '#ffffff'),
+                              self.font.render(self.warnings[6], True, '#ffffff')]
+        
+        self.text_not_registered_warning = self.font.render(resources.locale.NOT_REGISTERED_WARNING, True, "white")
 
     def start(self, context: GameContext):
         screen = context.get_screen()
         pygame.mixer.music.load(resources.music.REGISTER_THEME)
         pygame.mixer.music.play(-1)
+        self.failed = False
+        self.interface = InterfaceController(context)
         # Crear botones
         self.button_xor = Button(
             context,
@@ -105,21 +127,6 @@ class CreateTeam(Scene):
                                      'Pais',
                                      list(c.name for c in globals.countries))
 
-        self.warnings = ["La contraseña debe tener entre 6 y 10 caracteres",
-                         "La contraseña solo puede tener *,-,_,#.",
-                         "La contraseña debe tener números",
-                         "La contraseña debe tener letras minúsculas",
-                         "La contraseña debe tener letras mayúsculas",
-                         "La contraseña posee 3 caracteres repetidos de manera secuencial"]
-        self.warning_flags = [False for _ in range(6)]
-
-        self.warnings_text = [self.font.render(self.warnings[0], True, '#ffffff'),
-                              self.font.render(self.warnings[1], True, '#ffffff'),
-                              self.font.render(self.warnings[2], True, '#ffffff'),
-                              self.font.render(self.warnings[3], True, '#ffffff'),
-                              self.font.render(self.warnings[4], True, '#ffffff'),
-                              self.font.render(self.warnings[5], True, '#ffffff')]
-
     def update(self, context: GameContext):
         for box in self.input_boxes:
             box.update()
@@ -138,6 +145,7 @@ class CreateTeam(Scene):
     
     def draw(self, context: GameContext):
         screen = context.get_screen()
+        screen_rect = context.get_screen_rect()
         screen.fill("white")
         screen.blit(self.img_bg,(0,0))
         for box in self.input_boxes:
@@ -145,11 +153,14 @@ class CreateTeam(Scene):
         self.button_xor.draw(screen)
         self.button_back.draw(screen)
         self.button_registrar.draw(screen)
+        self.text_not_registered_warning
         for i,j in enumerate(self.warning_flags):
             if j:
                 screen.blit(self.warnings_text[i], (100, 400 + 30*i))
         self.dropdown_ods.draw(screen)
         self.dropdown_country.draw(screen)
+        if self.failed:
+            self.interface.draw_surface(self.text_not_registered_warning, (screen_rect.centerx, screen_rect.bottom - 20))
             
     def exit(self, context: GameContext):
         pygame.mixer.music.stop()
@@ -168,9 +179,11 @@ class CreateTeam(Scene):
         self.warning_flags[2] = not teams.contain_number(password)
         self.warning_flags[3] = not teams.contain_lowercase(password)
         self.warning_flags[4] = not teams.contain_uppercase(password)
-        self.warning_flags[5] = teams.repeat_3(password)
+        self.warning_flags[5] = not teams.contain_specials(password)
+        self.warning_flags[6] = teams.repeat_3(password)
 
     def register_team(self):
+        self.failed = False
         name = self.input_name.text
         email  = self.input_email.text
         password = self.input_password.text
@@ -191,4 +204,5 @@ class CreateTeam(Scene):
             for box in self.input_boxes:
                 box.txt_surface = pygame.font.SysFont(None, 32).render(box.text, True, box.color)
         else:
+            self.failed = True
             print("No registrado")

@@ -3,7 +3,6 @@ from .logic import teams as t
 from .logic import countries as c
 
 teams = t.load_records()
-print(teams)
 team1 = None
 team2 = None
 countries =  c.load_records()
@@ -24,7 +23,6 @@ ods = ['Fin de la pobreza',
     'Vida de ecosistemas terrestres',
     'Paz, justicia e instituciones sólidas',
     'Alianzas para lograr los objetivos']
-print(countries)
 
 board_size = 9 #BOARD_SIZE_MIN
 board_dir = BOARD_DIR_OCLOCK

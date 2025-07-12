@@ -54,3 +54,7 @@ class InputBox:
         screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Dibujar bordes
         pygame.draw.rect(screen, self.color, self.rect, 2)
+    
+    def reset(self):
+        self.text = ""
+        self.txt_surface = self.font.render(None, True, self.color)

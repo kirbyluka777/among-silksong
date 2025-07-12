@@ -3,7 +3,7 @@ import os
 import struct
         
 TEAM_FILE = 'data\\equipos.bin'
-TEAM_FORMAT = 'i20s50s8s3si'
+TEAM_FORMAT = 'i20s50s10s3si'
 TEAM_SIZE = struct.calcsize(TEAM_FORMAT)
 
 class Team:
@@ -54,7 +54,7 @@ def load_records() -> list[Team]:
         i += 1
 
 def XOR_Encrypt(text, key=5):
-    return ' '.join(str(ord(c) ^ int(key)) for c in text)
+    return ''.join(chr(ord(c) ^ int(key)) for c in text)
 
 def XOR_Decrypt(encrypted_text, key=5):
     return ''.join(chr(int(num) ^ int(key)) for num in encrypted_text.split())
@@ -95,6 +95,12 @@ def contain_lowercase(password):
 def contain_uppercase(password):
     for c in password:
         if is_uppercase_case_letter(c):
+            return True
+    return False
+
+def contain_specials(password):
+    for c in password:
+        if c in "*=_#":
             return True
     return False
 

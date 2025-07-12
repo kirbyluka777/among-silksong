@@ -1,5 +1,5 @@
 from engine import *
-from engine.controllers.ui import Button, InputBox
+from engine.controllers.ui import Button, InputBox, InterfaceController
 from ..constants import *
 from .. import resources
 from .. import globals
@@ -12,15 +12,18 @@ BOX_HEIGHT = 32
 class Options(Scene):
     def load(self, context: GameContext):
         self.img_bg = pygame.image.load(resources.images.MENU_BG)
-        self.font = pygame.font.Font(resources.fonts.COINY, 40)
+        self.font = pygame.font.Font(resources.fonts.COINY, 24)
         self.button_sound_sel = pygame.mixer.Sound(resources.sounds.BUTTON_SEL)
         self.button_sound_pressed = pygame.mixer.Sound(resources.sounds.BUTTON_PRESSED)
+        self.text_not_registered_warning = self.font.render(resources.locale.NOT_REGISTERED_WARNING, True, "white")
 
     def start(self, context: GameContext):
         screen = context.get_screen()
         pygame.mixer.music.load(resources.music.OPTIONS_THEME)
         pygame.mixer.music.play(-1)
+        self.interface = InterfaceController(context)
         self.pais = False
+        self.failed = False
         
         # Crear botones
         self.button_volume = Button(
@@ -106,6 +109,7 @@ class Options(Scene):
     
     def draw(self, context: GameContext):
         screen = context.get_screen()
+        screen_rect = context.get_screen_rect()
         screen.fill("white")
         screen.blit(self.img_bg,(0,0))
         for button in self.buttons:
@@ -114,6 +118,8 @@ class Options(Scene):
             for box in self.input_boxes:
                 box.draw(screen)
             self.button_done.draw(screen)
+        if self.failed:
+            self.interface.draw_surface(self.text_not_registered_warning, (screen_rect.centerx, screen_rect.bottom - 20))
             
     def exit(self, context: GameContext):
         pygame.mixer.music.stop()
@@ -123,7 +129,8 @@ class Options(Scene):
         self.pais = False if self.pais else True
     
     def register_country(self):
-        code  = self.input_code.text
+        self.failed = False
+        code = self.input_code.text
         name = self.input_name.text
 
         if code and name:
@@ -132,6 +139,9 @@ class Options(Scene):
             countries.save_record(new_country)
             print(f'registrado: {new_country.name}\n'
                 f'codigo: {new_country.code}')
+            self.input_code.reset()
+            self.input_name.reset()
+            self.toggle_countries()
         else:
+            self.failed = True
             print("No registrado")
-        self.toggle_countries()

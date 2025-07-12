@@ -78,9 +78,3 @@ def get_total_km_from_expedition(expedition_id, turn):
         if isinstance(detail, MoveEvent) and (turn is None or detail.player_id == turn):
             km += detail.steps
     return km
-
-if __name__=="__main__":
-    sex = read_details(2)
-    for x in sex:
-        if x.isinstance(MoveEvent):
-            print(x)

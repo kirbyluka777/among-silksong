@@ -11,7 +11,7 @@ from . import records
 from .. import globals
 
 def search_b(team_id) -> bool:
-    team = teams.search_team(team_id)
+    team = teams.search_team_by_name(team_id)
     if not team:
         print("not team")
         return False

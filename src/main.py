@@ -2,6 +2,7 @@ from engine import *
 from starboard.scenes import *
 from starboard.logic import countries
 from starboard.logic.countries import Country
+from starboard import globals
 import os
 
 if not os.path.exists("data"):
@@ -14,6 +15,7 @@ if not os.path.exists(countries.COUNTRY_FILE):
     countries.save_record(Country("USA", "Estados Unidos"))
     countries.save_record(Country("RUS", "Rusia"))
     countries.save_record(Country("VEN", "Venezuela"))
+    globals.countries = countries.load_records()
 
 setup = GameSetup("Coconut", [
     Intro(),

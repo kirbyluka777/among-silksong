@@ -22,7 +22,7 @@ class TeamStats(Scene):
         self.success = False
         self.text = Text(
             context,
-            text="Ingrese el código de un equipo para ver sus estadísticas.",
+            text="Ingrese el nombre de un equipo para ver sus estadísticas.",
             pos=(400,100),
             dim=(140,32),
             font=self.font)
@@ -30,7 +30,7 @@ class TeamStats(Scene):
             context,
             pos=(100, 200),
             dim=(BOX_WIDTH, BOX_HEIGHT),
-            head='Código de Equipo',
+            head='Nombre de Equipo',
             font=self.font)
         self.button_back = Button(
             context,
@@ -78,4 +78,4 @@ class TeamStats(Scene):
         pass
 
     def id_input(self):
-        self.success = search_b(int(self.input_id.text))
+        self.success = search_b(self.input_id.text)

@@ -131,7 +131,7 @@ class Expedition(Scene):
         self.img_dark_overlay = pygame.Surface(screen_rect.size, pygame.SRCALPHA)
         self.img_dark_overlay.fill((0, 0, 0, 128))
 
-        self.img_ods_cards = [[pygame.transform.scale(pygame.image.load(card), (400, 400)) for card in ods] for ods in resources.images.ODS_CARDS]
+        self.img_ods_cards = [[pygame.transform.scale(pygame.image.load(card), (350, 350)) for card in ods] for ods in resources.images.ODS_CARDS]
 
         self.menu_font = pygame.font.Font(resources.fonts.COINY, 24)
         self.basic_font = pygame.font.SysFont("Arial", 10)
@@ -590,7 +590,7 @@ class Expedition(Scene):
                     # Declararlo como ganador de partida
                     self.state.transition_to(STATE_WIN)
                 # Si ambos jugadores se quedaron sin energía
-                elif self.energy[TURN_PLAYER_ONE] <= 0 and self.energy[TURN_PLAYER_ONE] <= 0:
+                elif self.energy[TURN_PLAYER_ONE] <= 0 and self.energy[TURN_PLAYER_TWO] <= 0:
                     # Declararlo como empate
                     self.state.transition_to(STATE_TIES)
                 # Sino, pasar de turno y reiniciar estado para el menú de estrategia
@@ -718,7 +718,7 @@ class Expedition(Scene):
 
         # Dibujar ODS
         if self.target_ods and (self.state.is_current(STATE_ACTION) or self.state.is_current(STATE_END_OF_TURN)) and not self.insufficient and not self.disabled[self.turn]:
-            screen.blit(self.target_ods, (screen_rect.centerx - self.target_ods.get_width() // 2, screen_rect.height * 3/4 - self.target_ods.get_height() // 2))
+            screen.blit(self.target_ods, (screen_rect.left + 50, screen_rect.height * 3/4 - self.target_ods.get_height() // 2))
         
         # Dibujar dado
         if self.state.is_current(STATE_THROW_DICE):
